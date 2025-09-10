@@ -107,6 +107,28 @@ case $1 in
         echo -e "${GREEN}Update completed!${NC}"
         ;;
         
+    "test")
+        echo -e "${YELLOW}Running k6 load tests...${NC}"
+        
+        # Check if k6 is available
+        if command -v k6 &> /dev/null; then
+            echo "Using local k6 installation"
+            ./run-k6-tests.sh
+        elif command -v docker &> /dev/null; then
+            echo "Using Docker k6"
+            echo "Running basic connectivity test..."
+            docker run --rm --network traefik-network \
+                -v "$(pwd)/tests/k6:/tests" \
+                grafana/k6:latest run \
+                --env BASE_URL=http://traefik:80 \
+                /tests/root-endpoint-test.js
+        else
+            echo -e "${RED}❌ Neither k6 nor Docker is available${NC}"
+            echo "Please install k6 or use: ./run-k6-tests.sh"
+            exit 1
+        fi
+        ;;
+        
     *)
         echo -e "${BLUE}Traefik Multi-Project Management Script${NC}"
         echo ""
@@ -121,6 +143,7 @@ case $1 in
         echo "  logs    - Show logs for specific service"
         echo "  clean   - Stop services and cleanup Docker"
         echo "  update  - Update and restart all services"
+        echo "  test    - Run k6 load tests"
         echo ""
         echo -e "${YELLOW}First time setup:${NC}"
         echo "1. $0 setup"
