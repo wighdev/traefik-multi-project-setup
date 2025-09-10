@@ -15,12 +15,32 @@ show_status() {
     echo -e "${BLUE}=== Project Services Status ===${NC}"
     docker compose -f projects-docker-compose.yml ps
     echo ""
+    
+    # Check if K6 services are running
+    if docker ps | grep -q "k6-web-dashboard"; then
+        echo -e "${BLUE}=== K6 Load Testing Services ===${NC}"
+        docker compose --profile k6-ui ps
+        echo ""
+    fi
+    
     echo -e "${GREEN}Access URLs:${NC}"
     echo "📊 Dashboard: http://localhost:58002/"
     echo "🔧 Jenkins: http://localhost:58002/jenkins"
     echo "🚀 Project 1: http://localhost:58002/project1"
     echo "🐍 Project 2: http://localhost:58002/project2"
     echo "⚡ Traefik: http://localhost:58002/dashboard/"
+    
+    if docker ps | grep -q "k6-web-dashboard"; then
+        echo ""
+        echo -e "${YELLOW}K6 Load Testing:${NC}"
+        echo "🧪 K6 Dashboard: http://k6.localhost:58002/"
+        echo "📊 K6 Grafana: http://k6.localhost:58002/grafana"
+        echo "📈 InfluxDB: http://localhost:8086"
+    else
+        echo ""
+        echo -e "${YELLOW}K6 Load Testing (Not Running):${NC}"
+        echo "Start with: $0 k6 start"
+    fi
 }
 
 case $1 in
@@ -129,6 +149,101 @@ case $1 in
         fi
         ;;
         
+    "k6")
+        case $2 in
+            "start")
+                echo -e "${YELLOW}Starting K6 Web UI...${NC}"
+                
+                # Ensure traefik network exists
+                docker network create traefik-network 2>/dev/null || true
+                
+                # Build K6 dashboard if needed
+                if [ ! -f "./k6-dashboard/frontend/build/index.html" ]; then
+                    echo "Building K6 Dashboard frontend..."
+                    cd k6-dashboard/frontend
+                    npm install && npm run build
+                    cd ../..
+                fi
+                
+                # Start K6 services with profile
+                docker compose --profile k6-ui up -d k6-dashboard influxdb grafana
+                
+                echo -e "${GREEN}K6 Web UI started!${NC}"
+                echo ""
+                echo "🧪 K6 Dashboard: http://k6.localhost:58002/"
+                echo "📊 K6 Grafana: http://k6.localhost:58002/grafana"
+                echo "📈 InfluxDB: http://localhost:8086 (admin/admin123)"
+                echo ""
+                echo "Add to /etc/hosts:"
+                echo "127.0.0.1    k6.localhost"
+                ;;
+            "stop")
+                echo -e "${YELLOW}Stopping K6 Web UI...${NC}"
+                docker compose --profile k6-ui down
+                echo -e "${GREEN}K6 Web UI stopped!${NC}"
+                ;;
+            "restart")
+                echo -e "${YELLOW}Restarting K6 Web UI...${NC}"
+                $0 k6 stop
+                sleep 3
+                $0 k6 start
+                ;;
+            "build")
+                echo -e "${YELLOW}Building K6 Dashboard...${NC}"
+                cd k6-dashboard
+                docker build -t k6-dashboard .
+                cd ..
+                echo -e "${GREEN}K6 Dashboard built!${NC}"
+                ;;
+            "logs")
+                if [ -z "$3" ]; then
+                    echo -e "${YELLOW}Available K6 services:${NC}"
+                    echo "- k6-dashboard"
+                    echo "- influxdb"
+                    echo "- grafana"
+                    echo ""
+                    echo "Usage: $0 k6 logs <service-name>"
+                else
+                    echo -e "${BLUE}Showing logs for: $3${NC}"
+                    docker logs -f $3
+                fi
+                ;;
+            "cli")
+                echo -e "${YELLOW}Running K6 CLI test...${NC}"
+                if [ -z "$3" ]; then
+                    echo "Usage: $0 k6 cli <test-file>"
+                    echo "Available tests:"
+                    ls -1 tests/k6/*.js | grep -v README
+                else
+                    docker run --rm --network traefik-network \
+                        -v "$(pwd)/tests/k6:/tests" \
+                        grafana/k6:latest run \
+                        --out influxdb=http://influxdb:8086/k6 \
+                        --env BASE_URL=http://traefik:80 \
+                        "/tests/$3"
+                fi
+                ;;
+            *)
+                echo -e "${BLUE}K6 Load Testing Management${NC}"
+                echo ""
+                echo -e "${GREEN}Usage: $0 k6 {command}${NC}"
+                echo ""
+                echo "Commands:"
+                echo "  start     - Start K6 Web UI (Dashboard + InfluxDB + Grafana)"
+                echo "  stop      - Stop K6 Web UI services"
+                echo "  restart   - Restart K6 Web UI"
+                echo "  build     - Build K6 Dashboard Docker image"
+                echo "  logs      - Show logs for K6 service"
+                echo "  cli <test>- Run test via CLI (bypass web UI)"
+                echo ""
+                echo -e "${YELLOW}Quick start:${NC}"
+                echo "1. $0 k6 start"
+                echo "2. Add '127.0.0.1 k6.localhost' to /etc/hosts"
+                echo "3. Visit http://k6.localhost:58002/"
+                ;;
+        esac
+        ;;
+        
     "monitoring")
         case $2 in
             "start")
@@ -227,7 +342,8 @@ case $1 in
         echo "  logs    - Show logs for specific service"
         echo "  clean   - Stop services and cleanup Docker"
         echo "  update  - Update and restart all services"
-        echo "  test    - Run k6 load tests"
+        echo "  test    - Run k6 load tests (CLI)"
+        echo "  k6      - Manage K6 Web UI load testing"
         echo "  monitoring - Manage monitoring stack (Prometheus/Grafana)"
         echo ""
         echo -e "${YELLOW}First time setup:${NC}"

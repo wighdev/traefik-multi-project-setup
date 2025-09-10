@@ -33,3 +33,27 @@ services:
       - DEBUG=false
       - FLASK_ENV=production
     restart: always
+
+  # K6 Load Testing Web UI
+  k6-dashboard:
+    extends:
+      file: docker-compose.k6.yml
+      service: k6-dashboard
+    profiles:
+      - k6-ui
+
+  # InfluxDB for K6 metrics
+  influxdb:
+    extends:
+      file: docker-compose.k6.yml
+      service: influxdb
+    profiles:
+      - k6-ui
+
+  # Enhanced Grafana
+  grafana:
+    extends:
+      file: docker-compose.k6.yml
+      service: grafana
+    profiles:
+      - k6-ui

@@ -1,0 +1,37 @@
+{
+  "name": "k6-web-dashboard",
+  "version": "1.0.0",
+  "description": "Web UI for K6 Load Testing Management",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "build": "npm run build:frontend",
+    "build:frontend": "cd frontend && npm run build",
+    "install:frontend": "cd frontend && npm install"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "body-parser": "^1.20.2",
+    "ws": "^8.14.2",
+    "influx": "^5.9.3",
+    "child_process": "^1.0.2",
+    "fs-extra": "^11.1.1",
+    "path": "^0.12.7",
+    "uuid": "^9.0.1",
+    "multer": "^1.4.5-lts.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "keywords": [
+    "k6",
+    "load-testing",
+    "performance",
+    "web-ui",
+    "dashboard"
+  ],
+  "author": "Traefik Multi-Project Setup",
+  "license": "MIT"
+}
