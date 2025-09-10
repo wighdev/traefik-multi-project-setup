@@ -11,6 +11,18 @@ logs/
 tests/k6/logs/
 tests/k6/*.json
 
+# UI Test Results  
+test-results/
+playwright-report/
+tests/ui/screenshots/
+tests/ui/*.png
+tests/ui/*.mp4
+
+# Test artifacts
+coverage/
+junit.xml
+*.spec.js.snap
+
 # SSL Certificates
 certs/
 *.pem

@@ -171,6 +171,416 @@ Repository ini dilengkapi dengan comprehensive load testing suite menggunakan k6
 - ✅ Terintegrasi dengan CI/CD pipelines
 - ✅ Menyediakan hasil yang detail dan mudah dipahami
 
+## UI Testing dengan Playwright
+
+Repository ini juga dilengkapi dengan comprehensive UI testing framework menggunakan Playwright untuk end-to-end testing yang reliable dan powerful.
+
+### Apa itu Playwright?
+
+[Playwright](https://playwright.dev/) adalah modern end-to-end testing framework yang dikembangkan oleh Microsoft. Playwright memungkinkan Anda untuk:
+
+- ✅ Test pada multiple browsers (Chromium, Firefox, Safari)
+- ✅ Cross-platform testing (Windows, Linux, macOS)
+- ✅ Auto-wait untuk elements tanpa flaky tests
+- ✅ Network interception dan mocking
+- ✅ Screenshots dan video recording
+- ✅ Parallel test execution
+- ✅ Terintegrasi dengan CI/CD pipelines
+
+### Struktur UI Testing
+
+```
+tests/
+├── ui/                          # UI test files
+│   ├── connection.test.js       # Service connection tests
+│   ├── routing.test.js          # Routing and navigation tests
+│   ├── health-checks.test.js    # Health check endpoint tests
+│   └── functionality.test.js    # Basic functionality tests
+├── fixtures/                    # Test data and fixtures
+│   └── test-data.json          # Common test data
+├── support/                     # Helper functions and utilities
+│   ├── test-helpers.js         # Common test helper functions
+│   ├── global-setup.js         # Global test setup
+│   ├── global-teardown.js      # Global test teardown
+│   └── nginx.conf              # Test report server configuration
+└── k6/                         # k6 load tests (existing)
+```
+
+### Quick Start UI Testing
+
+1. **Install Dependencies:**
+   ```bash
+   npm install
+   npm run install:browsers
+   ```
+
+2. **Run UI Tests:**
+   ```bash
+   # Run all tests
+   ./run-ui-tests.sh
+   
+   # Run with browser GUI (for debugging)
+   ./run-ui-tests.sh test:headed
+   
+   # Run specific browser
+   ./run-ui-tests.sh test:browser chromium
+   
+   # Run and stop services after
+   ./run-ui-tests.sh --stop
+   ```
+
+3. **View Test Results:**
+   ```bash
+   npm run test:ui:report
+   ```
+
+### Available UI Tests
+
+| Test File | Description | Coverage |
+|-----------|-------------|----------|
+| `connection.test.js` | Tests service connectivity through Traefik | Dashboard, Project1, Project2, Jenkins, Traefik dashboard |
+| `routing.test.js` | Tests routing between services and deep linking | URL routing, navigation, session persistence |
+| `health-checks.test.js` | Tests service health and performance | Response times, error handling, CORS |
+| `functionality.test.js` | Tests basic functionality of each service | Interactive elements, API endpoints, responsive design |
+
+### Menjalankan UI Tests
+
+#### 1. Menggunakan Script Otomatis (Recommended)
+
+```bash
+# Pastikan services sudah running (atau script akan start otomatis)
+./manage.sh start
+
+# Run all UI tests
+./run-ui-tests.sh
+
+# Run dengan opsi debugging
+./run-ui-tests.sh test:headed
+
+# Run pada browser specific
+./run-ui-tests.sh test:browser firefox
+
+# Run test file specific
+./run-ui-tests.sh test:specific connection
+
+# Check prerequisites dan service status
+./run-ui-tests.sh --check
+
+# Show help
+./run-ui-tests.sh help
+```
+
+#### 2. Manual Testing dengan npm
+
+```bash
+# Install dependencies
+npm install
+npm run install:browsers
+
+# Start services jika belum running
+npm run start:testing
+
+# Run tests
+npm run test:ui                # All tests
+npm run test:ui:headed         # With browser GUI
+npm run test:ui:debug          # Debug mode
+
+# View results
+npm run test:ui:report
+```
+
+#### 3. Docker-based Testing
+
+```bash
+# Run tests in Docker container
+docker compose -f docker-compose.testing.yml --profile ui-testing up --build
+
+# View test reports
+docker compose -f docker-compose.testing.yml --profile reporting up -d
+# Then access http://localhost:58002/test-reports
+```
+
+### Memahami Hasil Test Playwright
+
+#### Test Reports
+
+Playwright menyediakan beberapa format report:
+
+1. **HTML Report** (default): Interactive report dengan screenshots dan traces
+2. **JSON Report**: Machine-readable results untuk CI/CD
+3. **JUnit XML**: Untuk integrasi dengan test management tools
+
+#### Key Metrics
+
+```
+Running 25 tests using 1 worker
+  25 passed (30s)
+  
+✓ Service Connection Tests (4 tests)
+✓ Service Routing Tests (8 tests)  
+✓ Health Check Tests (6 tests)
+✓ Service Functionality Tests (7 tests)
+```
+
+**Interpretation:**
+- **Passed Tests**: Semua tests berhasil dijalankan
+- **Duration**: Total waktu execution
+- **Screenshots**: Automatic pada test failures
+- **Videos**: Recording pada test failures
+
+### Browser Support Matrix
+
+| Browser | Status | Mobile Support | Notes |
+|---------|--------|---------------|-------|
+| Chromium | ✅ | ✅ | Primary test browser |
+| Firefox | ✅ | ❌ | Desktop only |
+| Safari (WebKit) | ✅ | ✅ | Cross-platform |
+| Edge | ✅ | ❌ | Windows/macOS |
+
+### Test Scenarios Coverage
+
+#### Connection Tests
+- ✅ Main dashboard accessibility
+- ✅ Project 1 (Node.js) through Traefik
+- ✅ Project 2 (Python) through Traefik
+- ✅ Jenkins accessibility
+- ✅ Traefik dashboard access
+
+#### Routing Tests
+- ✅ Navigation between services
+- ✅ Deep linking support
+- ✅ URL parameters handling
+- ✅ Session persistence
+- ✅ Error handling (404s)
+- ✅ Trailing slash consistency
+
+#### Health Checks
+- ✅ Service availability verification
+- ✅ Response time monitoring
+- ✅ Load testing (concurrent requests)
+- ✅ Security headers validation
+- ✅ CORS configuration
+- ✅ SSL/TLS readiness
+
+#### Functionality Tests
+- ✅ Dashboard navigation
+- ✅ Project 1 interactive elements
+- ✅ Project 2 form handling
+- ✅ Jenkins UI elements
+- ✅ Responsive design (mobile/tablet/desktop)
+- ✅ Cross-browser compatibility
+- ✅ JavaScript functionality
+
+### Membuat UI Test Baru
+
+#### 1. Create Test File
+
+```bash
+# Copy existing test as template
+cp tests/ui/connection.test.js tests/ui/my-new-test.js
+```
+
+#### 2. Edit Test Structure
+
+```javascript
+const { test, expect } = require('@playwright/test');
+const { waitForPageLoad, SERVICES } = require('../support/test-helpers.js');
+
+test.describe('My New Test Suite', () => {
+  test('should test my new feature', async ({ page }) => {
+    await test.step('Navigate to service', async () => {
+      await page.goto(SERVICES.project1);
+      await waitForPageLoad(page);
+    });
+
+    await test.step('Test specific functionality', async () => {
+      // Your test logic here
+      expect(page.url()).toContain('/project1');
+    });
+  });
+});
+```
+
+#### 3. Add Test Data
+
+Update `tests/fixtures/test-data.json`:
+
+```json
+{
+  "myNewFeature": {
+    "expectedElements": ["Button", "Form"],
+    "testData": {
+      "inputValue": "test-data"
+    }
+  }
+}
+```
+
+#### 4. Update Helper Functions
+
+Add new helpers to `tests/support/test-helpers.js` if needed:
+
+```javascript
+async function myNewHelper(page, selector) {
+  // Helper function implementation
+}
+
+module.exports = {
+  // ... existing exports
+  myNewHelper
+};
+```
+
+### CI/CD Integration
+
+UI tests terintegrasi dengan GitHub Actions workflow yang akan:
+
+1. **Automatic Testing**: Run pada setiap push dan PR
+2. **Multi-Browser**: Test pada Chromium, Firefox, dan WebKit
+3. **Parallel Execution**: Tests run dalam parallel untuk efficiency
+4. **Artifact Collection**: Screenshots, videos, dan reports
+5. **Performance Baseline**: Check performance regression
+
+#### GitHub Actions Workflow
+
+File `.github/workflows/ui-tests.yml` menghandle:
+
+- ✅ Dependency installation
+- ✅ Service startup dan health checks
+- ✅ Multi-browser test execution
+- ✅ Test report generation
+- ✅ Artifact upload (screenshots, videos, logs)
+- ✅ Cleanup dan service shutdown
+
+### Configuration Files
+
+#### playwright.config.js
+
+Main configuration file yang mengatur:
+
+```javascript
+module.exports = defineConfig({
+  testDir: './tests/ui',
+  fullyParallel: true,
+  retries: process.env.CI ? 2 : 0,
+  reporter: [['html'], ['json'], ['junit']],
+  use: {
+    baseURL: 'http://localhost:58002',
+    trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
+  },
+  projects: [
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
+    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
+  ],
+});
+```
+
+#### docker-compose.testing.yml
+
+Docker setup untuk testing environment:
+
+- **playwright-tests**: Service untuk menjalankan Playwright tests
+- **test-reporter**: Nginx server untuk test reports
+- **test-data-generator**: Utility untuk generate test data
+
+### Best Practices UI Testing
+
+1. **Page Object Model**: Organize tests dengan page objects
+2. **Wait Strategies**: Gunakan smart waits, avoid hard delays  
+3. **Test Isolation**: Setiap test harus independent
+4. **Data Management**: Use fixtures untuk test data
+5. **Screenshot Strategy**: Ambil screenshots pada failures
+6. **Retry Logic**: Configure retries untuk flaky tests
+7. **Parallel Execution**: Run tests dalam parallel ketika possible
+
+### Troubleshooting UI Tests
+
+#### Test Gagal dengan Timeout
+
+```bash
+# Check service status
+./manage.sh status
+
+# Check service logs
+./manage.sh logs
+
+# Run single test untuk debugging
+./run-ui-tests.sh test:debug
+```
+
+#### Browser Installation Issues
+
+```bash
+# Reinstall browsers
+npx playwright install --force
+
+# Check browser installation
+npx playwright install --dry-run
+```
+
+#### Service Tidak Accessible
+
+```bash
+# Check network connectivity
+curl http://localhost:58002/
+
+# Check Docker network
+docker network inspect traefik-network
+
+# Restart services
+./manage.sh restart
+```
+
+#### CI/CD Pipeline Failures
+
+1. Check GitHub Actions logs
+2. Download test artifacts dari failed runs
+3. Review screenshots dan videos
+4. Check service logs artifacts
+
+### Advanced Configuration
+
+#### Parallel Test Execution
+
+```javascript
+// playwright.config.js
+module.exports = defineConfig({
+  workers: process.env.CI ? 1 : undefined, // Adjust for CI
+  fullyParallel: true,
+  // ...
+});
+```
+
+#### Custom Test Reporting
+
+```bash
+# Generate custom reports
+npx playwright test --reporter=line,html,json
+
+# Merge reports dari multiple runs
+npx playwright merge-reports --reporter html ./all-blob-reports
+```
+
+#### Environment-Specific Configuration
+
+```bash
+# Test against different environments
+BASE_URL=http://staging.example.com npx playwright test
+
+# Use environment-specific config
+npx playwright test --config=playwright.staging.config.js
+```
+
+- ✅ Menulis test scripts menggunakan JavaScript ES6+
+- ✅ Melakukan load testing dengan berbagai skenario
+- ✅ Mengukur performance metrics (response time, throughput, error rate)
+- ✅ Mendukung protokol HTTP/1.1, HTTP/2, WebSockets, dan gRPC
+- ✅ Terintegrasi dengan CI/CD pipelines
+- ✅ Menyediakan hasil yang detail dan mudah dipahami
+
 ### Instalasi k6
 
 #### Opsi 1: Direct Installation
