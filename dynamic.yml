@@ -26,11 +26,35 @@ http:
       service: k6-dashboard-service
       priority: 100
 
-    # K6 Grafana integration
+    # K6 Dashboard router - Path-based for IP access (NEW)
+    k6-dashboard-ip:
+      rule: "PathPrefix(`/k6`)"
+      service: k6-dashboard-service
+      middlewares:
+        - k6-dashboard-stripprefix
+      priority: 150
+
+    # K6 Grafana integration - Host-based (original)
     k6-grafana:
       rule: "Host(`k6.localhost`) && PathPrefix(`/grafana`)"
       service: k6-grafana-service
       priority: 200
+
+    # Grafana router - Path-based for IP access (NEW)
+    grafana-ip:
+      rule: "PathPrefix(`/grafana`)"
+      service: k6-grafana-service
+      middlewares:
+        - grafana-stripprefix
+      priority: 150
+
+    # Prometheus router - Path-based for IP access (NEW)
+    prometheus-ip:
+      rule: "PathPrefix(`/prometheus`)"
+      service: prometheus-service
+      middlewares:
+        - prometheus-stripprefix
+      priority: 150
 
   middlewares:
     jenkins-headers:
@@ -48,6 +72,24 @@ http:
       stripPrefix:
         prefixes:
           - "/project2"
+
+    # New middleware for Grafana path stripping
+    grafana-stripprefix:
+      stripPrefix:
+        prefixes:
+          - "/grafana"
+
+    # New middleware for Prometheus path stripping
+    prometheus-stripprefix:
+      stripPrefix:
+        prefixes:
+          - "/prometheus"
+
+    # New middleware for K6 Dashboard path stripping
+    k6-dashboard-stripprefix:
+      stripPrefix:
+        prefixes:
+          - "/k6"
 
     k6-cors:
       headers:
@@ -87,3 +129,9 @@ http:
       loadBalancer:
         servers:
           - url: "http://grafana:3000"
+
+    # Prometheus service for path-based access (NEW)
+    prometheus-service:
+      loadBalancer:
+        servers:
+          - url: "http://prometheus:9090"

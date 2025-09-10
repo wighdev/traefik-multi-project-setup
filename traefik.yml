@@ -7,6 +7,10 @@ api:
   debug: true
   insecure: true
 
+# Accept external connections and IPs
+serverstransport:
+  insecureskipverify: true
+
 # Metrics configuration for Prometheus
 metrics:
   prometheus:
@@ -17,8 +21,17 @@ metrics:
 entryPoints:
   web:
     address: ":80"
+    # Accept requests from any IP
+    forwardedHeaders:
+      trustedIPs:
+        - "0.0.0.0/0"
+        - "::/0"
   websecure:
     address: ":443"
+    forwardedHeaders:
+      trustedIPs:
+        - "0.0.0.0/0"
+        - "::/0"
 
 providers:
   docker:

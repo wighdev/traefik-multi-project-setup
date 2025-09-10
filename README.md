@@ -90,7 +90,9 @@ traefik-multi-project-setup/
    - Project 1: `http://YOUR_IP:58002/project1`
    - Project 2: `http://YOUR_IP:58002/project2`
    - Traefik Dashboard: `http://YOUR_IP:58002/dashboard/`
-   - **K6 Load Testing**: `http://k6.localhost:58002/`
+   - **K6 Load Testing**: `http://k6.localhost:58002/` **OR** `http://YOUR_IP:58002/k6`
+   - **Grafana**: `http://YOUR_IP:58002/grafana` (works with any IP)
+   - **Prometheus**: `http://YOUR_IP:58002/prometheus` (works with any IP)
 
 ## K6 Load Testing Web UI 🧪
 
@@ -177,16 +179,42 @@ open http://k6.localhost:58002/
 | `full-system-test.js` | Complete user journey | All endpoints |
 | `example-custom-test.js` | Template for new tests | Custom endpoint |
 
+## Static IP Access Support
+
+✅ **ALL SERVICES** now support both hostname-based and IP-based access patterns:
+
+### Host-Based Access (Original)
+- Requires proper `/etc/hosts` entries for subdomains
+- `http://k6.localhost:58002/` - K6 Dashboard
+- `http://k6.localhost:58002/grafana` - K6 Grafana  
+- `http://monitoring.localhost:58002/` - Monitoring Grafana
+- `http://prometheus.localhost:58002/` - Prometheus
+
+### IP-Based Access (NEW - Fixed 404 Issues)
+- Works with any IP address (localhost, external IPs, etc.)
+- `http://YOUR_IP:58002/k6` - K6 Dashboard
+- `http://YOUR_IP:58002/grafana` - Grafana (any instance)
+- `http://YOUR_IP:58002/prometheus` - Prometheus
+- All other services work natively with IP access
+
+### Benefits
+- 🚀 **No more 404 errors** when accessing services via IP addresses
+- 🌐 **External IP compatibility** - services accessible from other machines
+- 🔄 **Backward compatibility** - original hostname access still works
+- 📱 **Mobile/remote access** - use actual server IP instead of localhost
+
 ## Services
 
-| Service | URL | Description |
-|---------|-----|-------------|
-| Dashboard | `http://YOUR_IP:58002/` | Landing page dengan akses ke semua services |
-| Jenkins | `http://YOUR_IP:58002/jenkins` | CI/CD Pipeline (akses via IP) |
-| Project 1 | `http://YOUR_IP:58002/project1` | Example Node.js application |
-| Project 2 | `http://YOUR_IP:58002/project2` | Example Python/Django application |
-| Traefik Dashboard | `http://YOUR_IP:58002/traefik` | Traefik monitoring dashboard |
-| **K6 Dashboard** | `http://k6.localhost:58002/` | **Load testing web interface** |
+| Service | URL | Alternative IP Access | Description |
+|---------|-----|-----------------------|-------------|
+| Dashboard | `http://YOUR_IP:58002/` | Same | Landing page dengan akses ke semua services |
+| Jenkins | `http://YOUR_IP:58002/jenkins` | Same | CI/CD Pipeline (akses via IP) |
+| Project 1 | `http://YOUR_IP:58002/project1` | Same | Example Node.js application |
+| Project 2 | `http://YOUR_IP:58002/project2` | Same | Example Python/Django application |
+| Traefik Dashboard | `http://YOUR_IP:58002/traefik` | Same | Traefik monitoring dashboard |
+| **K6 Dashboard** | `http://k6.localhost:58002/` | `http://YOUR_IP:58002/k6` | **Load testing web interface** |
+| **Grafana** | `http://k6.localhost:58002/grafana` | `http://YOUR_IP:58002/grafana` | **Performance metrics and dashboards** |
+| **Prometheus** | `http://prometheus.localhost:58002/` | `http://YOUR_IP:58002/prometheus` | **Metrics collection and monitoring** |
 
 ## Adding New Project
 
