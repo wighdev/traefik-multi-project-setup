@@ -1,0 +1,87 @@
+# Prometheus configuration for Traefik Multi-Project Setup
+global:
+  scrape_interval: 15s # Set the scrape interval to every 15 seconds. Default is every 1 minute.
+  evaluation_interval: 15s # Evaluate rules every 15 seconds. The default is every 1 minute.
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          # - alertmanager:9093
+
+# Load rules once and periodically evaluate them according to the global 'evaluation_interval'.
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+# A scrape configuration containing exactly one endpoint to scrape:
+scrape_configs:
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # Traefik metrics
+  - job_name: "traefik"
+    static_configs:
+      - targets: ["traefik:8080"]
+    metrics_path: /metrics
+    scrape_interval: 5s
+
+  # Project 1 (Node.js) - if it exposes metrics
+  - job_name: "project1-nodejs"
+    static_configs:
+      - targets: ["project1:3000"]
+    metrics_path: /metrics
+    scrape_interval: 15s
+    scrape_timeout: 10s
+
+  # Project 2 (Python Flask) - if it exposes metrics
+  - job_name: "project2-python"
+    static_configs:
+      - targets: ["project2:8000"]
+    metrics_path: /metrics
+    scrape_interval: 15s
+    scrape_timeout: 10s
+
+  # Jenkins metrics - if available
+  - job_name: "jenkins"
+    static_configs:
+      - targets: ["jenkins:8080"]
+    metrics_path: /prometheus
+    scrape_interval: 30s
+    scrape_timeout: 15s
+
+  # Docker container metrics (if cadvisor is available)
+  - job_name: "cadvisor"
+    static_configs:
+      - targets: ["cadvisor:8080"]
+    scrape_interval: 10s
+    scrape_timeout: 10s
+
+  # Node Exporter for system metrics (if available)
+  - job_name: "node-exporter"
+    static_configs:
+      - targets: ["node-exporter:9100"]
+    scrape_interval: 15s
+
+  # Blackbox exporter for endpoint monitoring
+  - job_name: "blackbox"
+    metrics_path: /probe
+    params:
+      module: [http_2xx]  # Look for a HTTP 200 response.
+    static_configs:
+      - targets:
+        - http://traefik:58002    # Root endpoint
+        - http://traefik:58002/project1   # Project 1
+        - http://traefik:58002/project2   # Project 2
+        - http://traefik:58002/jenkins    # Jenkins
+        - http://traefik:58002/dashboard/ # Traefik dashboard
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115  # The blackbox exporter's real hostname:port.

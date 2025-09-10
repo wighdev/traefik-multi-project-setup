@@ -18,6 +18,11 @@ TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 
 # Test files
 declare -a TEST_FILES=(
+    "test_root.js"
+    "test_project1.js"
+    "test_project2.js"
+    "test_jenkins.js" 
+    "test_dashboard.js"
     "root-endpoint-test.js"
     "project1-endpoint-test.js"
     "project2-endpoint-test.js"
@@ -28,6 +33,11 @@ declare -a TEST_FILES=(
 
 # Test descriptions
 declare -A TEST_DESCRIPTIONS=(
+    ["test_root.js"]="Root/Landing Page Load Test (New Format)"
+    ["test_project1.js"]="Project 1 (Node.js) Load Test (New Format)"
+    ["test_project2.js"]="Project 2 (Python) Load Test (New Format)"
+    ["test_jenkins.js"]="Jenkins Endpoint Load Test (New Format)"
+    ["test_dashboard.js"]="Traefik Dashboard Load Test (New Format)"
     ["root-endpoint-test.js"]="Landing Page Load Test"
     ["project1-endpoint-test.js"]="Project 1 (Node.js) Load Test"
     ["project2-endpoint-test.js"]="Project 2 (Python) Load Test"

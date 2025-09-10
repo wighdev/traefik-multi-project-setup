@@ -18,6 +18,9 @@ Setup ini memungkinkan Anda menjalankan multiple project/aplikasi dengan hanya m
 - ✅ Dashboard monitoring
 - ✅ Easy management scripts
 - ✅ **k6 Load Testing Suite** - Comprehensive performance testing
+- ✅ **Prometheus & Grafana Monitoring** - Complete observability stack
+- ✅ **Metrics Collection** - Application and infrastructure monitoring
+- ✅ **Alerting System** - Proactive issue detection
 
 ## Structure
 
@@ -26,6 +29,7 @@ traefik-multi-project-setup/
 ├── traefik-docker-compose.yml    # Traefik service
 ├── projects-docker-compose.yml   # All projects/applications
 ├── docker-compose.k6.yml         # k6 load testing service (optional)
+├── docker-compose.monitoring.yml # Prometheus & Grafana monitoring stack
 ├── traefik.yml                   # Traefik main configuration
 ├── dynamic.yml                   # Dynamic routing configuration
 ├── setup.sh                      # Setup script
@@ -37,13 +41,20 @@ traefik-multi-project-setup/
 ├── project2/                     # Example project 2
 ├── tests/                        # Load testing suite
 │   └── k6/                       # k6 test scripts
-│       ├── root-endpoint-test.js
+│       ├── test_root.js          # Root endpoint test (new format)
+│       ├── test_jenkins.js       # Jenkins endpoint test (new format)
+│       ├── test_project1.js      # Project 1 test (new format)
+│       ├── test_project2.js      # Project 2 test (new format)
+│       ├── test_dashboard.js     # Traefik dashboard test (new format)
+│       ├── root-endpoint-test.js # Legacy format tests
 │       ├── jenkins-endpoint-test.js
 │       ├── project1-endpoint-test.js
 │       ├── project2-endpoint-test.js
 │       ├── traefik-dashboard-test.js
 │       ├── full-system-test.js
 │       └── example-custom-test.js
+├── monitoring/                   # Monitoring configuration
+│   └── prometheus.yml            # Prometheus configuration
 └── README.md
 ```
 
@@ -156,6 +167,311 @@ docker network inspect traefik-network
 ### Jenkins prefix issues
 Pastikan JENKINS_OPTS sudah set dengan `--prefix=/jenkins`
 
+## Monitoring Stack dengan Prometheus dan Grafana
+
+Repository ini menyediakan monitoring stack yang komprehensif menggunakan Prometheus untuk metrics collection dan Grafana untuk dashboard visualization, terintegrasi penuh dengan Traefik multi-project setup.
+
+### Komponen Monitoring
+
+#### 1. Prometheus
+- **Fungsi**: Time-series database untuk metrics collection
+- **Port**: Diakses via Traefik di `http://localhost:58002/prometheus`
+- **Konfigurasi**: `monitoring/prometheus.yml`
+- **Data**: Stored in Docker volume `prometheus_data`
+
+#### 2. Grafana
+- **Fungsi**: Dashboard visualization dan alerting
+- **Port**: Diakses via Traefik di `http://localhost:58002/grafana`
+- **Default Login**: admin / admin (akan diminta ganti password pertama kali)
+- **Data**: Stored in Docker volume `grafana_data`
+
+### Setup Monitoring
+
+#### 1. Start Monitoring Stack
+
+```bash
+# Start Traefik dan projects terlebih dahulu
+./manage.sh start
+
+# Start monitoring services
+docker-compose -f docker-compose.monitoring.yml up -d
+
+# Verifikasi services running
+docker-compose -f docker-compose.monitoring.yml ps
+```
+
+#### 2. Akses Prometheus
+
+```bash
+# Buka browser ke:
+http://localhost:58002/prometheus
+
+# Atau gunakan curl untuk test
+curl http://localhost:58002/prometheus/api/v1/status/config
+```
+
+#### 3. Akses Grafana
+
+```bash
+# Buka browser ke:
+http://localhost:58002/grafana
+
+# Login dengan:
+Username: admin
+Password: admin
+```
+
+### Konfigurasi Prometheus
+
+File `monitoring/prometheus.yml` sudah dikonfigurasi untuk monitoring:
+
+#### Target Metrics yang Dikumpulkan
+
+1. **Traefik Metrics**
+   - Response times dan status codes
+   - Request rates per service
+   - Backend health status
+   - Load balancer metrics
+
+2. **Application Metrics** (jika tersedia)
+   - Project 1 (Node.js) metrics di `/metrics`
+   - Project 2 (Python Flask) metrics di `/metrics`
+   - Jenkins metrics di `/prometheus`
+
+3. **System Metrics** (opsional)
+   - Docker container metrics via cAdvisor
+   - Node exporter untuk sistem metrics
+   - Blackbox exporter untuk endpoint monitoring
+
+#### Example Prometheus Queries
+
+```promql
+# HTTP request rate untuk semua services
+rate(traefik_service_requests_total[5m])
+
+# Response time percentiles
+histogram_quantile(0.95, rate(traefik_service_request_duration_seconds_bucket[5m]))
+
+# Error rate per service
+rate(traefik_service_requests_total{code!~"2.."}[5m])
+
+# Service availability
+up{job="traefik"}
+```
+
+### Setup Grafana Dashboards
+
+#### 1. Add Prometheus Data Source
+
+Setelah login ke Grafana:
+
+1. Go to **Configuration** → **Data Sources**
+2. Click **Add data source**
+3. Select **Prometheus**
+4. Configure:
+   ```
+   Name: Prometheus
+   URL: http://prometheus:9090
+   Access: Server (default)
+   ```
+5. Click **Save & Test**
+
+#### 2. Import Pre-built Dashboards
+
+Grafana menyediakan dashboard siap pakai:
+
+```bash
+# Traefik Dashboard
+Dashboard ID: 4475
+URL: https://grafana.com/grafana/dashboards/4475
+
+# Docker Container Monitoring
+Dashboard ID: 193
+URL: https://grafana.com/grafana/dashboards/193
+
+# Node Exporter Dashboard
+Dashboard ID: 1860
+URL: https://grafana.com/grafana/dashboards/1860
+```
+
+**Cara Import:**
+1. Di Grafana, go to **Dashboards** → **Import**
+2. Enter Dashboard ID atau upload JSON file
+3. Select Prometheus data source
+4. Click **Import**
+
+#### 3. Custom Dashboard untuk Traefik Multi-Project
+
+Create dashboard dengan panels:
+
+##### Panel 1: Request Rate
+```promql
+sum(rate(traefik_service_requests_total[5m])) by (service)
+```
+
+##### Panel 2: Response Times
+```promql
+histogram_quantile(0.95, 
+  sum(rate(traefik_service_request_duration_seconds_bucket[5m])) by (service, le)
+)
+```
+
+##### Panel 3: Error Rate
+```promql
+sum(rate(traefik_service_requests_total{code!~"2.."}[5m])) by (service)
+```
+
+##### Panel 4: Service Status
+```promql
+up{job="traefik"}
+```
+
+### Alerting Setup
+
+#### 1. Configure Alert Notifications
+
+Di Grafana:
+1. Go to **Alerting** → **Notification channels**
+2. Add channel (Email, Slack, WebHook, dll.)
+3. Test notification
+
+#### 2. Create Alerts
+
+Example alert rules:
+
+```yaml
+# High Error Rate Alert
+Alert Name: High Error Rate
+Condition: 
+  Query: sum(rate(traefik_service_requests_total{code!~"2.."}[5m])) by (service)
+  Threshold: > 0.05 (5% error rate)
+
+# High Response Time Alert  
+Alert Name: Slow Response Time
+Condition:
+  Query: histogram_quantile(0.95, sum(rate(traefik_service_request_duration_seconds_bucket[5m])) by (le))
+  Threshold: > 2 (2 seconds)
+
+# Service Down Alert
+Alert Name: Service Down
+Condition:
+  Query: up{job="traefik"}
+  Threshold: < 1
+```
+
+### Advanced Monitoring Features
+
+#### 1. Log Aggregation
+
+Untuk centralized logging, tambahkan ke `docker-compose.monitoring.yml`:
+
+```yaml
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    ports:
+      - "3100:3100"
+    networks:
+      - traefik-network
+
+  promtail:
+    image: grafana/promtail:latest
+    container_name: promtail
+    volumes:
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - ./monitoring/promtail.yml:/etc/promtail/config.yml
+    networks:
+      - traefik-network
+```
+
+#### 2. Metrics Export dari Applications
+
+**Node.js (Project 1) - Express Metrics:**
+```javascript
+const prometheus = require('prom-client');
+const express = require('express');
+
+// Create metrics
+const httpRequestsTotal = new prometheus.Counter({
+  name: 'http_requests_total',
+  help: 'Total HTTP requests',
+  labelNames: ['method', 'route', 'status_code']
+});
+
+// Export metrics endpoint
+app.get('/metrics', (req, res) => {
+  res.set('Content-Type', prometheus.register.contentType);
+  res.end(prometheus.register.metrics());
+});
+```
+
+**Python Flask (Project 2) - Flask Metrics:**
+```python
+from prometheus_flask_exporter import PrometheusMetrics
+
+app = Flask(__name__)
+metrics = PrometheusMetrics(app)
+
+# Metrics akan tersedia di /metrics endpoint
+```
+
+### Monitoring Commands
+
+```bash
+# Start monitoring stack
+docker-compose -f docker-compose.monitoring.yml up -d
+
+# Stop monitoring stack
+docker-compose -f docker-compose.monitoring.yml down
+
+# View monitoring logs
+docker-compose -f docker-compose.monitoring.yml logs -f
+
+# Backup Grafana data
+docker run --rm -v prometheus_data:/data alpine tar czf - /data > prometheus_backup.tar.gz
+docker run --rm -v grafana_data:/data alpine tar czf - /data > grafana_backup.tar.gz
+
+# Restore Grafana data
+docker run --rm -v grafana_data:/data alpine tar xzf - < grafana_backup.tar.gz
+```
+
+### Troubleshooting Monitoring
+
+#### Prometheus tidak bisa scrape targets
+
+```bash
+# Check targets status
+curl http://localhost:58002/prometheus/api/v1/targets
+
+# Check network connectivity
+docker exec prometheus ping traefik
+
+# Check Prometheus config
+docker exec prometheus cat /etc/prometheus/prometheus.yml
+```
+
+#### Grafana tidak bisa connect ke Prometheus
+
+```bash
+# Test connection dari Grafana container
+docker exec grafana curl http://prometheus:9090/api/v1/status/config
+
+# Check data source config di Grafana UI
+# Configuration → Data Sources → Prometheus → Test
+```
+
+#### Missing Metrics
+
+```bash
+# Check if applications expose metrics
+curl http://localhost:58002/project1/metrics
+curl http://localhost:58002/project2/metrics
+
+# Check Traefik metrics
+curl http://localhost:8080/metrics  # Direct Traefik API
+```
+
 ## Load Testing dengan k6
 
 Repository ini dilengkapi dengan comprehensive load testing suite menggunakan k6, sebuah modern load testing tool yang powerful dan mudah digunakan.
@@ -210,8 +526,18 @@ docker run --rm -i --network traefik-network grafana/k6:latest run -e BASE_URL=h
 
 ### Test Scripts yang Tersedia
 
-Repository ini sudah menyertakan test scripts untuk semua endpoints:
+Repository ini sudah menyertakan test scripts untuk semua endpoints dalam dua format:
 
+#### Format Baru (Recommended)
+| Test Script | Description | Target Endpoint |
+|-------------|-------------|-----------------|
+| `test_root.js` | Test landing page performa dan content | `http://localhost:58002/` |
+| `test_jenkins.js` | Test Jenkins accessibility dan response time | `http://localhost:58002/jenkins` |
+| `test_project1.js` | Test Project 1 (Node.js) app performance | `http://localhost:58002/project1` |
+| `test_project2.js` | Test Project 2 (Python) app performance | `http://localhost:58002/project2` |
+| `test_dashboard.js` | Test Traefik dashboard accessibility | `http://localhost:58002/dashboard/` |
+
+#### Format Legacy (Tetap Didukung)
 | Test Script | Description | Target Endpoint |
 |-------------|-------------|-----------------|
 | `root-endpoint-test.js` | Test landing page performa dan content | `http://localhost:58002/` |
