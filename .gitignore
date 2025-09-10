@@ -7,6 +7,10 @@ postgres_data/
 logs/
 *.log
 
+# k6 Test Results
+tests/k6/logs/
+tests/k6/*.json
+
 # SSL Certificates
 certs/
 *.pem

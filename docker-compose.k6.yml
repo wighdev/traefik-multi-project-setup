@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  k6:
+    image: grafana/k6:latest
+    container_name: k6-load-tester
+    networks:
+      - traefik-network
+    volumes:
+      - ./tests/k6:/tests
+      - ./tests/k6/logs:/logs
+    environment:
+      - BASE_URL=http://traefik:80
+    command: --help
+    profiles:
+      - testing
+    
+  # k6 with InfluxDB for metrics (optional advanced setup)
+  k6-with-influxdb:
+    image: grafana/k6:latest
+    container_name: k6-influx-tester
+    networks:
+      - traefik-network
+    volumes:
+      - ./tests/k6:/tests
+      - ./tests/k6/logs:/logs
+    environment:
+      - BASE_URL=http://traefik:80
+    command: --help
+    profiles:
+      - testing-advanced
+    depends_on:
+      - influxdb
+
+  influxdb:
+    image: influxdb:1.8
+    container_name: k6-influxdb
+    networks:
+      - traefik-network
+    environment:
+      - INFLUXDB_DB=k6
+      - INFLUXDB_USER=k6
+      - INFLUXDB_USER_PASSWORD=k6pass
+    volumes:
+      - influxdb_data:/var/lib/influxdb
+    profiles:
+      - testing-advanced
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: k6-grafana
+    networks:
+      - traefik-network
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./tests/k6/grafana/provisioning:/etc/grafana/provisioning
+    profiles:
+      - testing-advanced
+    depends_on:
+      - influxdb
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana.rule=PathPrefix(`/grafana`)"
+      - "traefik.http.routers.grafana.service=grafana"
+      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+      - "traefik.http.middlewares.grafana-stripprefix.stripprefix.prefixes=/grafana"
+      - "traefik.http.routers.grafana.middlewares=grafana-stripprefix"
+
+networks:
+  traefik-network:
+    external: true
+
+volumes:
+  influxdb_data:
+  grafana_data:
