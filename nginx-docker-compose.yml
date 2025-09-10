@@ -1,0 +1,54 @@
+services:
+  nginx-proxy:
+    image: nginx:alpine
+    container_name: nginx-traefik-proxy
+    restart: unless-stopped
+    
+    # Use bridge networking and map ports to specific interface
+    networks:
+      - traefik-network
+    
+    ports:
+      # Map nginx ports to static IP interface
+      # This requires nginx to be configured to listen on all interfaces (0.0.0.0)
+      # The static IP binding happens at the Docker level
+      - "103.217.173.158:58002:80"
+      - "103.217.173.158:58003:443"
+    
+    volumes:
+      # Nginx configuration
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/sites-available:/etc/nginx/sites-available:ro
+      - ./nginx/sites-enabled:/etc/nginx/sites-enabled:ro
+      
+      # SSL certificates (when available)
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      
+      # Logs
+      - ./nginx/logs:/var/log/nginx
+      
+      # Share Docker socket for health checks (optional)
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    
+    environment:
+      - NGINX_HOST=103.217.173.158
+      - NGINX_PORT=58002
+    
+    depends_on:
+      - traefik
+    
+    labels:
+      - "nginx.description=Reverse proxy for static IP access to Docker containers"
+      - "nginx.service=traefik-multi-project-proxy"
+    
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+networks:
+  default:
+    external: true
+    name: traefik-network

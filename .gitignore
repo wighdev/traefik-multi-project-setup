@@ -9,6 +9,9 @@ grafana_data/
 logs/
 *.log
 
+# Nginx logs (created during installation)
+nginx/logs/*.log
+
 # k6 Test Results
 tests/k6/logs/
 tests/k6/*.json
