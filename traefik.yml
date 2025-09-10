@@ -7,6 +7,13 @@ api:
   debug: true
   insecure: true
 
+# Metrics configuration for Prometheus
+metrics:
+  prometheus:
+    addRoutersLabels: true
+    addServicesLabels: true
+    addEntryPointsLabels: true
+
 entryPoints:
   web:
     address: ":80"
