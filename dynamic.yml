@@ -20,6 +20,18 @@ http:
       middlewares:
         - project2-stripprefix
 
+    # K6 Dashboard router (k6.localhost subdomain)
+    k6-dashboard:
+      rule: "Host(`k6.localhost`)"
+      service: k6-dashboard-service
+      priority: 100
+
+    # K6 Grafana integration
+    k6-grafana:
+      rule: "Host(`k6.localhost`) && PathPrefix(`/grafana`)"
+      service: k6-grafana-service
+      priority: 200
+
   middlewares:
     jenkins-headers:
       headers:
@@ -37,6 +49,19 @@ http:
         prefixes:
           - "/project2"
 
+    k6-cors:
+      headers:
+        accessControlAllowMethods:
+          - GET
+          - OPTIONS
+          - PUT
+          - POST
+          - DELETE
+        accessControlAllowOriginList:
+          - "*"
+        accessControlAllowHeaders:
+          - "*"
+
   services:
     jenkins-service:
       loadBalancer:
@@ -52,3 +77,13 @@ http:
       loadBalancer:
         servers:
           - url: "http://project2-app:8000"
+
+    k6-dashboard-service:
+      loadBalancer:
+        servers:
+          - url: "http://k6-dashboard:3001"
+
+    k6-grafana-service:
+      loadBalancer:
+        servers:
+          - url: "http://grafana:3000"

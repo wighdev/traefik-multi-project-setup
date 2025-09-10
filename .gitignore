@@ -2,6 +2,8 @@
 jenkins_home/
 mysql_data/
 postgres_data/
+influxdb_data/
+grafana_data/
 
 # Logs
 logs/
@@ -41,6 +43,12 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .coverage
+
+# K6 Dashboard Frontend
+k6-dashboard/frontend/node_modules/
+k6-dashboard/frontend/build/
+k6-dashboard/frontend/.env.local
+k6-dashboard/frontend/.env.production
 
 # Backup files  
 *.backup

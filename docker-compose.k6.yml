@@ -1,6 +1,36 @@
 version: '3.8'
 
 services:
+  # K6 Web Dashboard - Main UI for managing tests
+  k6-dashboard:
+    build: ./k6-dashboard
+    container_name: k6-web-dashboard
+    restart: unless-stopped
+    networks:
+      - traefik-network
+    volumes:
+      - ./tests/k6:/tests
+      - ./tests/k6/logs:/logs
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+    ports:
+      - "3001:3001"
+      - "3002:3002"
+    depends_on:
+      - influxdb
+    labels:
+      - "traefik.enable=true"
+      # Main k6 dashboard
+      - "traefik.http.routers.k6-dashboard.rule=Host(`k6.localhost`)"
+      - "traefik.http.routers.k6-dashboard.service=k6-dashboard"
+      - "traefik.http.services.k6-dashboard.loadbalancer.server.port=3001"
+      # WebSocket service for real-time updates
+      - "traefik.http.routers.k6-websocket.rule=Host(`k6.localhost`) && PathPrefix(`/ws`)"
+      - "traefik.http.routers.k6-websocket.service=k6-websocket"
+      - "traefik.http.services.k6-websocket.loadbalancer.server.port=3002"
+
+  # K6 Engine for running tests
   k6:
     image: grafana/k6:latest
     container_name: k6-load-tester
@@ -11,14 +41,60 @@ services:
       - ./tests/k6/logs:/logs
     environment:
       - BASE_URL=http://traefik:80
-    command: --help
+    command: sleep infinity
+    restart: unless-stopped
+    depends_on:
+      - influxdb
     profiles:
-      - testing
-    
-  # k6 with InfluxDB for metrics (optional advanced setup)
-  k6-with-influxdb:
+      - k6-ui
+
+  # InfluxDB for storing K6 metrics
+  influxdb:
+    image: influxdb:1.8
+    container_name: k6-influxdb
+    restart: unless-stopped
+    networks:
+      - traefik-network
+    environment:
+      - INFLUXDB_DB=k6
+      - INFLUXDB_USER=k6
+      - INFLUXDB_USER_PASSWORD=k6pass
+      - INFLUXDB_ADMIN_USER=admin
+      - INFLUXDB_ADMIN_PASSWORD=admin123
+    volumes:
+      - influxdb_data:/var/lib/influxdb
+      - ./monitoring/influxdb/init:/docker-entrypoint-initdb.d
+    ports:
+      - "8086:8086"
+
+  # Enhanced Grafana with K6 dashboards
+  grafana:
+    image: grafana/grafana:latest
+    container_name: k6-grafana
+    restart: unless-stopped
+    networks:
+      - traefik-network
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=http://k6.localhost/grafana
+      - GF_SERVER_SERVE_FROM_SUB_PATH=true
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      - influxdb
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.k6-grafana.rule=Host(`k6.localhost`) && PathPrefix(`/grafana`)"
+      - "traefik.http.routers.k6-grafana.service=k6-grafana"
+      - "traefik.http.services.k6-grafana.loadbalancer.server.port=3000"
+
+  # Optional: Standalone K6 runner for CLI usage
+  k6-cli:
     image: grafana/k6:latest
-    container_name: k6-influx-tester
+    container_name: k6-cli-runner
     networks:
       - traefik-network
     volumes:
@@ -28,47 +104,9 @@ services:
       - BASE_URL=http://traefik:80
     command: --help
     profiles:
-      - testing-advanced
+      - cli-only
     depends_on:
       - influxdb
-
-  influxdb:
-    image: influxdb:1.8
-    container_name: k6-influxdb
-    networks:
-      - traefik-network
-    environment:
-      - INFLUXDB_DB=k6
-      - INFLUXDB_USER=k6
-      - INFLUXDB_USER_PASSWORD=k6pass
-    volumes:
-      - influxdb_data:/var/lib/influxdb
-    profiles:
-      - testing-advanced
-
-  grafana:
-    image: grafana/grafana:latest
-    container_name: k6-grafana
-    networks:
-      - traefik-network
-    ports:
-      - "3000:3000"
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin123
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - ./tests/k6/grafana/provisioning:/etc/grafana/provisioning
-    profiles:
-      - testing-advanced
-    depends_on:
-      - influxdb
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.grafana.rule=PathPrefix(`/grafana`)"
-      - "traefik.http.routers.grafana.service=grafana"
-      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
-      - "traefik.http.middlewares.grafana-stripprefix.stripprefix.prefixes=/grafana"
-      - "traefik.http.routers.grafana.middlewares=grafana-stripprefix"
 
 networks:
   traefik-network:
