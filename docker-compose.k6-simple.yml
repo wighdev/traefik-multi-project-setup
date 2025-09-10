@@ -1,0 +1,71 @@
+version: '3.8'
+
+# Simplified K6 setup for quick testing without building the full web UI
+services:
+  # InfluxDB for K6 metrics
+  influxdb:
+    image: influxdb:1.8
+    container_name: k6-influxdb
+    restart: unless-stopped
+    networks:
+      - traefik-network
+    environment:
+      - INFLUXDB_DB=k6
+      - INFLUXDB_USER=k6
+      - INFLUXDB_USER_PASSWORD=k6pass
+      - INFLUXDB_ADMIN_USER=admin
+      - INFLUXDB_ADMIN_PASSWORD=admin123
+    volumes:
+      - influxdb_data:/var/lib/influxdb
+    ports:
+      - "8086:8086"
+
+  # Grafana with K6 dashboards
+  grafana:
+    image: grafana/grafana:latest
+    container_name: k6-grafana
+    restart: unless-stopped
+    networks:
+      - traefik-network
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+    ports:
+      - "3000:3000"
+    depends_on:
+      - influxdb
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana-k6.rule=PathPrefix(`/grafana`)"
+      - "traefik.http.routers.grafana-k6.service=grafana-k6"
+      - "traefik.http.services.grafana-k6.loadbalancer.server.port=3000"
+      - "traefik.http.middlewares.grafana-k6-stripprefix.stripprefix.prefixes=/grafana"
+      - "traefik.http.routers.grafana-k6.middlewares=grafana-k6-stripprefix"
+
+  # K6 Engine for running tests
+  k6-runner:
+    image: grafana/k6:latest
+    container_name: k6-runner
+    networks:
+      - traefik-network
+    volumes:
+      - ./tests/k6:/tests
+      - ./tests/k6/logs:/logs
+    environment:
+      - BASE_URL=http://traefik:80
+    command: ["sh", "-c", "while true; do sleep 30; done"]
+    restart: unless-stopped
+    depends_on:
+      - influxdb
+
+networks:
+  traefik-network:
+    external: true
+
+volumes:
+  influxdb_data:
+  grafana_data:
