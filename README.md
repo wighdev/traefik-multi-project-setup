@@ -18,6 +18,7 @@ Setup ini memungkinkan Anda menjalankan multiple project/aplikasi dengan hanya m
 - ✅ Dashboard monitoring
 - ✅ Easy management scripts
 - ✅ **k6 Load Testing Suite** - Comprehensive performance testing
+- ✅ **Prometheus & Grafana Monitoring** - Complete observability stack
 
 ## Structure
 
@@ -26,6 +27,7 @@ traefik-multi-project-setup/
 ├── traefik-docker-compose.yml    # Traefik service
 ├── projects-docker-compose.yml   # All projects/applications
 ├── docker-compose.k6.yml         # k6 load testing service (optional)
+├── docker-compose.monitoring.yml # Monitoring stack (Prometheus/Grafana)
 ├── traefik.yml                   # Traefik main configuration
 ├── dynamic.yml                   # Dynamic routing configuration
 ├── setup.sh                      # Setup script
@@ -35,6 +37,17 @@ traefik-multi-project-setup/
 │   └── index.html
 ├── project1/                     # Example project 1
 ├── project2/                     # Example project 2
+├── monitoring/                   # Monitoring configuration
+│   ├── prometheus.yml            # Prometheus configuration
+│   ├── alertmanager.yml          # AlertManager configuration
+│   └── grafana/                  # Grafana provisioning
+│       ├── provisioning/         # Auto-provisioning configs
+│       │   ├── datasources/      # Data source configs
+│       │   └── dashboards/       # Dashboard configs
+│       └── dashboards/           # Pre-built dashboards
+│           ├── traefik-dashboard.json
+│           ├── docker-containers-dashboard.json
+│           └── system-resources-dashboard.json
 ├── tests/                        # Load testing suite
 │   └── k6/                       # k6 test scripts
 │       ├── root-endpoint-test.js
@@ -73,6 +86,13 @@ traefik-multi-project-setup/
    - Project 2: `http://YOUR_IP:58002/project2`
    - Traefik Dashboard: `http://YOUR_IP:58002/traefik`
 
+5. **Start monitoring (optional):**
+   ```bash
+   ./manage.sh monitoring start
+   ```
+   - Grafana: `http://monitoring.localhost:58002/` (admin/admin123)
+   - Prometheus: `http://prometheus.localhost:58002/`
+
 ## Services
 
 | Service | URL | Description |
@@ -82,6 +102,14 @@ traefik-multi-project-setup/
 | Project 1 | `http://YOUR_IP:58002/project1` | Example Node.js application |
 | Project 2 | `http://YOUR_IP:58002/project2` | Example Python/Django application |
 | Traefik Dashboard | `http://YOUR_IP:58002/traefik` | Traefik monitoring dashboard |
+
+### Monitoring Services
+
+| Service | URL | Description |
+|---------|-----|-------------|
+| Grafana | `http://monitoring.localhost:58002/` | Monitoring dashboards dan visualization |
+| Prometheus | `http://prometheus.localhost:58002/` | Metrics collection dan querying |
+| AlertManager | `http://alerts.localhost:58002/` | Alert notifications (optional) |
 
 ## Adding New Project
 
@@ -508,6 +536,309 @@ which k6
 
 # Use Docker alternative
 docker run --rm grafana/k6:latest version
+```
+
+## Monitoring System dengan Prometheus & Grafana
+
+Repository ini dilengkapi dengan sistem monitoring lengkap menggunakan Prometheus untuk metrics collection dan Grafana untuk visualization dashboard.
+
+### Apa itu Monitoring Stack?
+
+**Prometheus** adalah open-source monitoring system yang powerful untuk:
+- ✅ Collecting time-series metrics dari berbagai services
+- ✅ Alerting berdasarkan kondisi metrics tertentu  
+- ✅ Querying data dengan PromQL (Prometheus Query Language)
+- ✅ Service discovery dan auto-configuration
+
+**Grafana** adalah visualization platform untuk:
+- ✅ Creating beautiful dashboards dan charts
+- ✅ Real-time monitoring dan alerting
+- ✅ Multiple data sources support
+- ✅ User management dan sharing capabilities
+
+### Quick Start Monitoring
+
+#### 1. Start Core Monitoring Services
+
+```bash
+# Start Traefik dan applications terlebih dahulu
+./manage.sh start
+
+# Start monitoring stack (Prometheus + Grafana)
+./manage.sh monitoring start
+```
+
+#### 2. Access Monitoring Dashboards
+
+- **📈 Grafana Dashboard**: `http://monitoring.localhost:58002/`
+  - Username: `admin`
+  - Password: `admin123`
+- **📊 Prometheus**: `http://prometheus.localhost:58002/`
+
+> **Note**: Untuk akses subdomain, tambahkan entri ke `/etc/hosts`:
+> ```bash
+> echo "127.0.0.1 monitoring.localhost prometheus.localhost alerts.localhost" | sudo tee -a /etc/hosts
+> ```
+
+### Pre-built Dashboards
+
+Repository sudah include 3 dashboard siap pakai:
+
+#### 1. Traefik Dashboard
+Monitor reverse proxy performance:
+- **Request Rate**: Total requests per second per service
+- **Response Time**: P50, P95, P99 latency metrics
+- **HTTP Status Codes**: Success/error rate breakdown
+- **Active Services**: Health status dari semua services
+
+#### 2. Docker Containers Dashboard
+Monitor container resource usage:
+- **CPU Usage**: Per-container CPU utilization
+- **Memory Usage**: RAM consumption per container
+- **Network I/O**: Incoming/outgoing traffic
+- **Running Containers**: Total active containers
+
+#### 3. System Resources Dashboard
+Monitor host system metrics:
+- **System Load**: 1m, 5m, 15m load averages
+- **CPU Usage**: Overall system CPU utilization
+- **Memory Usage**: System RAM usage percentage
+- **Disk Usage**: Filesystem usage per mount point
+- **Network Traffic**: Host network throughput
+
+### Monitoring Management Commands
+
+```bash
+# Core monitoring
+./manage.sh monitoring start      # Start Prometheus + Grafana
+./manage.sh monitoring stop       # Stop all monitoring services
+./manage.sh monitoring restart    # Restart monitoring stack
+
+# Optional monitoring services
+./manage.sh monitoring alertmanager     # Start AlertManager
+./manage.sh monitoring node-metrics     # Start Node Exporter (system metrics)
+./manage.sh monitoring container-metrics # Start cAdvisor (container metrics)
+
+# Monitoring logs
+./manage.sh monitoring logs prometheus
+./manage.sh monitoring logs grafana
+./manage.sh monitoring logs alertmanager
+```
+
+### Advanced Monitoring Setup
+
+#### 1. Enable System Metrics (Node Exporter)
+
+```bash
+# Start Node Exporter untuk system-level metrics
+./manage.sh monitoring node-metrics
+
+# Metrics yang tersedia:
+# - CPU, Memory, Disk, Network usage
+# - System load, uptime, filesystem stats
+# - Hardware temperature (jika tersedia)
+```
+
+#### 2. Enable Container Metrics (cAdvisor)
+
+```bash
+# Start cAdvisor untuk detailed container metrics
+./manage.sh monitoring container-metrics
+
+# Metrics yang tersedia:
+# - Per-container resource usage
+# - Container lifecycle events
+# - Docker daemon metrics
+```
+
+#### 3. Enable AlertManager untuk Notifications
+
+```bash
+# Start AlertManager
+./manage.sh monitoring alertmanager
+
+# Access AlertManager
+open http://alerts.localhost:58002/
+```
+
+### Metrics yang Dikumpulkan
+
+#### Traefik Metrics
+- `traefik_service_requests_total` - Total HTTP requests
+- `traefik_service_request_duration_seconds` - Request latency
+- `traefik_service_server_up` - Backend health status
+- `traefik_entrypoint_requests_total` - Requests per entrypoint
+
+#### Docker Metrics (cAdvisor)
+- `container_cpu_usage_seconds_total` - Container CPU usage
+- `container_memory_usage_bytes` - Container memory usage
+- `container_network_receive_bytes_total` - Network RX
+- `container_network_transmit_bytes_total` - Network TX
+
+#### System Metrics (Node Exporter)
+- `node_cpu_seconds_total` - Host CPU usage
+- `node_memory_MemTotal_bytes` - Total system memory
+- `node_filesystem_size_bytes` - Filesystem capacity
+- `node_load1`, `node_load5`, `node_load15` - System load
+
+### Custom Dashboards
+
+#### Membuat Dashboard Baru
+
+1. **Access Grafana**: `http://monitoring.localhost:58002/`
+2. **Login**: admin / admin123
+3. **Create Dashboard**: Click "+" → "Dashboard"
+4. **Add Panel**: Click "Add new panel"
+5. **Configure Query**: Pilih Prometheus sebagai data source
+
+#### Example PromQL Queries
+
+```promql
+# Request rate per service (last 5 minutes)
+sum(rate(traefik_service_requests_total[5m])) by (service)
+
+# Response time P95 per service
+histogram_quantile(0.95, sum(rate(traefik_service_request_duration_seconds_bucket[5m])) by (service, le))
+
+# Error rate (4xx + 5xx responses)
+sum(rate(traefik_service_requests_total{code=~"4..|5.."}[5m])) / sum(rate(traefik_service_requests_total[5m]))
+
+# Container CPU usage
+rate(container_cpu_usage_seconds_total{name!=""}[5m]) * 100
+
+# Container memory usage
+container_memory_usage_bytes{name!=""} / 1024 / 1024
+```
+
+### Alerting Configuration
+
+#### Setup Email Alerts
+
+1. **Edit AlertManager config**: `monitoring/alertmanager.yml`
+
+```yaml
+global:
+  smtp_smarthost: 'smtp.gmail.com:587'
+  smtp_from: 'your-email@gmail.com'
+
+receivers:
+  - name: 'email-notifications'
+    email_configs:
+      - to: 'admin@your-domain.com'
+        subject: '🚨 Alert: {{ .GroupLabels.alertname }}'
+        body: |
+          {{ range .Alerts }}
+          **Alert**: {{ .Annotations.summary }}
+          **Description**: {{ .Annotations.description }}
+          **Severity**: {{ .Labels.severity }}
+          {{ end }}
+```
+
+2. **Create Alert Rules**: `monitoring/alert_rules.yml`
+
+```yaml
+groups:
+  - name: traefik_alerts
+    rules:
+      - alert: HighErrorRate
+        expr: sum(rate(traefik_service_requests_total{code=~"5.."}[5m])) / sum(rate(traefik_service_requests_total[5m])) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is above 10% for 5 minutes"
+
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, sum(rate(traefik_service_request_duration_seconds_bucket[5m])) by (service, le)) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High response time detected"
+          description: "95th percentile response time is above 1s"
+```
+
+### Monitoring Best Practices
+
+#### 1. Dashboard Organization
+- **Overview Dashboard**: Key metrics untuk quick health check
+- **Detailed Dashboards**: Per-service deep dive
+- **Alerting Dashboard**: Active alerts dan silence status
+
+#### 2. Alert Configuration
+- **Progressive Severity**: warning → critical → emergency
+- **Meaningful Thresholds**: Berdasarkan SLA requirements
+- **Alert Fatigue Prevention**: Avoid noisy, low-value alerts
+
+#### 3. Data Retention
+- **Short-term**: High resolution (15s) untuk 7 days
+- **Long-term**: Lower resolution (5m) untuk 90 days
+- **Archive**: Critical metrics untuk compliance
+
+### Troubleshooting Monitoring
+
+#### Prometheus Not Scraping Targets
+
+```bash
+# Check target status
+curl http://prometheus.localhost:58002/api/v1/targets
+
+# Check network connectivity
+./manage.sh monitoring logs prometheus
+
+# Restart monitoring stack
+./manage.sh monitoring restart
+```
+
+#### Grafana Dashboard Empty
+
+```bash
+# Check data source connection
+# Grafana → Configuration → Data Sources → Prometheus
+
+# Verify metrics availability
+curl http://prometheus.localhost:58002/api/v1/query?query=up
+
+# Check dashboard queries
+# Dashboard → Panel → Edit → Query tab
+```
+
+#### High Resource Usage
+
+```bash
+# Monitor container resources
+docker stats
+
+# Check disk usage for metrics storage
+df -h | grep -E "(prometheus|grafana)"
+
+# Optimize retention settings in prometheus.yml
+```
+
+### Integration dengan External Services
+
+#### Slack Notifications
+
+```yaml
+# alertmanager.yml
+receivers:
+  - name: 'slack-notifications'
+    slack_configs:
+      - api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
+        channel: '#alerts'
+        title: 'Alert: {{ .GroupLabels.alertname }}'
+        text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+```
+
+#### Webhook Integration
+
+```yaml
+receivers:
+  - name: 'webhook-notifications'
+    webhook_configs:
+      - url: 'http://your-webhook-endpoint/alerts'
+        send_resolved: true
 ```
 
 ## Examples
