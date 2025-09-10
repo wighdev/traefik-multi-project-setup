@@ -1,8 +1,6 @@
-version: '3.8'
-
 services:
   traefik:
-    image: traefik:v2.10
+    image: traefik:v3.5
     container_name: traefik
     restart: unless-stopped
     ports:
@@ -12,18 +10,16 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./traefik.yml:/traefik.yml:ro
       - ./dynamic.yml:/dynamic.yml:ro
-      - ./certs:/certs:ro  # untuk SSL certificates jika diperlukan
+      - ./certs:/certs:ro
     environment:
       - TRAEFIK_LOG_LEVEL=INFO
     networks:
       - traefik-network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.traefik.rule=Host(`traefik.local`) || PathPrefix(`/traefik`)"
-      - "traefik.http.routers.traefik.service=api@internal"
-      - "traefik.http.routers.traefik.middlewares=traefik-auth"
-      - "traefik.http.middlewares.traefik-auth.basicauth.users=admin:$$2y$$10$$K8V2VQ8j9gOI8.FZjqEWXeB5EYwJ4YKt4yTBqR.mH4M8VjUZE8K8O"
+      - "traefik.http.routers.traefik-dashboard.rule=PathPrefix(`/dashboard`) || PathPrefix(`/api`)"
+      - "traefik.http.routers.traefik-dashboard.service=api@internal"
 
 networks:
   traefik-network:
-    external: true
+    name: traefik-network

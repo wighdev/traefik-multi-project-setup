@@ -1,50 +1,36 @@
-from flask import Flask, render_template_string
-import os
+from flask import Flask, jsonify
 from datetime import datetime
+import os
 
 app = Flask(__name__)
 
-HTML_TEMPLATE = """
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Project 2 - Python Flask App</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background: #fff8f0; }
-        .container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        h1 { color: #ff6b35; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Project 2 - Python Flask Application</h1>
-        <p>This is an example Python Flask application running through Traefik reverse proxy.</p>
-        <p><strong>Port:</strong> {{ port }}</p>
-        <p><strong>Debug Mode:</strong> {{ debug }}</p>
-        <p><strong>Current Time:</strong> {{ current_time }}</p>
-        <p><a href="/">Back to Dashboard</a></p>
-    </div>
-</body>
-</html>
-"""
-
 @app.route('/')
 def home():
-    return render_template_string(HTML_TEMPLATE, 
-                                port=os.environ.get('PORT', '8000'),
-                                debug=os.environ.get('DEBUG', 'False'),
-                                current_time=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+    return f'''
+    <html>
+        <head><title>Project 2 - Python Flask App</title></head>
+        <body style="font-family: Arial; padding: 40px; background: #f9f9f9;">
+            <h1 style="color: #27ae60;">🐍 Project 2 - Python Flask Application</h1>
+            <p>This is a sample Flask application running on port 8000</p>
+            <p><strong>Server Time:</strong> {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</p>
+            <p><strong>Python Version:</strong> 3.9</p>
+            <p><strong>Flask Version:</strong> Latest</p>
+            <a href="/" style="background: #27ae60; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Refresh</a>
+            <a href="/api/info" style="background: #f39c12; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-left: 10px;">API Info</a>
+            <a href="/jenkins" style="background: #e74c3c; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-left: 10px;">Jenkins</a>
+        </body>
+    </html>
+    '''
 
-@app.route('/api/status')
-def status():
-    return {
+@app.route('/api/info')
+def api_info():
+    return jsonify({
+        'project': 'Project 2',
+        'technology': 'Python Flask',
         'status': 'running',
-        'port': os.environ.get('PORT', '8000'),
-        'debug': os.environ.get('DEBUG', 'False'),
-        'timestamp': datetime.now().isoformat()
-    }
+        'timestamp': datetime.now().isoformat(),
+        'endpoints': ['/', '/api/info']
+    })
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 8000))
-    debug = os.environ.get('DEBUG', 'False').lower() == 'true'
-    app.run(host='0.0.0.0', port=port, debug=debug)
+    app.run(host='0.0.0.0', port=8000, debug=True)

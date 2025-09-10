@@ -1,0 +1,68 @@
+services:
+  # Jenkins Service
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins
+    restart: unless-stopped
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - JENKINS_OPTS="--prefix=/jenkins"
+      - JAVA_OPTS="-Djenkins.install.runSetupWizard=false"
+    user: root
+    networks:
+      - traefik-network
+    labels:
+      - "traefik.enable=true"
+
+  # Project 1 - Simple Node.js App
+  project1-app:
+    image: node:16-alpine
+    container_name: project1-app
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - ./project1:/app
+    command: sh -c "npm init -y && npm install express && node server.js"
+    networks:
+      - traefik-network
+    labels:
+      - "traefik.enable=true"
+
+  # Project 2 - Simple Python App  
+  project2-app:
+    image: python:3.9-slim
+    container_name: project2-app
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - ./project2:/app
+    command: sh -c "pip install flask && python app.py"
+    networks:
+      - traefik-network
+    labels:
+      - "traefik.enable=true"
+
+  # Default Landing Page
+  default-app:
+    image: nginx:alpine
+    container_name: default-app
+    restart: unless-stopped
+    volumes:
+      - ./default-site:/usr/share/nginx/html
+    networks:
+      - traefik-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.default.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.default.service=default"
+      - "traefik.http.services.default.loadbalancer.server.port=80"
+      - "traefik.http.routers.default.priority=1"
+
+volumes:
+  jenkins_home:
+
+networks:
+  traefik-network:
+    external: true

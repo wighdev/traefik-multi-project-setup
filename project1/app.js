@@ -1,26 +1,18 @@
 const express = require('express');
 const app = express();
-const PORT = process.env.PORT || 3000;
+const port = 3000;
 
 app.get('/', (req, res) => {
     res.send(`
         <html>
-            <head>
-                <title>Project 1 - Node.js App</title>
-                <style>
-                    body { font-family: Arial, sans-serif; margin: 40px; background: #f0f8ff; }
-                    .container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-                    h1 { color: #007cba; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <h1>Project 1 - Node.js Application</h1>
-                    <p>This is an example Node.js application running through Traefik reverse proxy.</p>
-                    <p><strong>Port:</strong> ${PORT}</p>
-                    <p><strong>Environment:</strong> ${process.env.NODE_ENV || 'production'}</p>
-                    <p><a href="/">Back to Dashboard</a></p>
-                </div>
+            <head><title>Project 1 - Node.js App</title></head>
+            <body style="font-family: Arial; padding: 40px; background: #f0f8ff;">
+                <h1 style="color: #2c3e50;">🚀 Project 1 - Node.js Application</h1>
+                <p>This is a sample Node.js application running on port 3000</p>
+                <p><strong>Server Time:</strong> ${new Date().toLocaleString()}</p>
+                <p><strong>Environment:</strong> ${process.env.NODE_ENV || 'development'}</p>
+                <a href="/" style="background: #3498db; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Refresh</a>
+                <a href="/jenkins" style="background: #e74c3c; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-left: 10px;">Jenkins</a>
             </body>
         </html>
     `);
@@ -29,12 +21,11 @@ app.get('/', (req, res) => {
 app.get('/api/status', (req, res) => {
     res.json({
         status: 'running',
-        port: PORT,
         timestamp: new Date().toISOString(),
-        environment: process.env.NODE_ENV || 'production'
+        project: 'Project 1'
     });
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Project 1 running on port ${PORT}`);
+app.listen(port, '0.0.0.0', () => {
+    console.log(`Project 1 app listening at http://0.0.0.0:${port}`);
 });

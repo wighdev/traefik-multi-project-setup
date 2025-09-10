@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Dashboard - Traefik Multi-Project</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { 
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.95);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        h1 { 
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 40px;
+            font-size: 1.2em;
+        }
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        .service-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+        }
+        .service-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+        }
+        .service-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+            display: block;
+        }
+        .service-title {
+            font-size: 1.4em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        .service-desc {
+            color: #7f8c8d;
+            line-height: 1.6;
+        }
+        .jenkins { border-left: 5px solid #e74c3c; }
+        .project1 { border-left: 5px solid #3498db; }
+        .project2 { border-left: 5px solid #27ae60; }
+        .traefik { border-left: 5px solid #f39c12; }
+        .status-info {
+            background: #ecf0f1;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+        }
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .status-item {
+            text-align: center;
+        }
+        .status-label {
+            color: #7f8c8d;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+        .status-value {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Server Dashboard</h1>
+        <p class="subtitle">Traefik Multi-Project Management System</p>
+        
+        <div class="services-grid">
+            <a href="/jenkins" class="service-card jenkins">
+                <div class="service-icon">🔧</div>
+                <div class="service-title">Jenkins CI/CD</div>
+                <div class="service-desc">
+                    Continuous Integration & Deployment server untuk automasi build dan deployment project.
+                </div>
+            </a>
+            
+            <a href="/project1" class="service-card project1">
+                <div class="service-icon">🚀</div>
+                <div class="service-title">Project 1 - Node.js</div>
+                <div class="service-desc">
+                    Aplikasi web berbasis Node.js dengan Express framework untuk development modern.
+                </div>
+            </a>
+            
+            <a href="/project2" class="service-card project2">
+                <div class="service-icon">🐍</div>
+                <div class="service-title">Project 2 - Python Flask</div>
+                <div class="service-desc">
+                    Aplikasi web Python dengan Flask framework untuk rapid development.
+                </div>
+            </a>
+            
+            <a href="/dashboard/" class="service-card traefik">
+                <div class="service-icon">⚡</div>
+                <div class="service-title">Traefik Dashboard</div>
+                <div class="service-desc">
+                    Monitor dan kelola routing, load balancing, dan traffic management.
+                </div>
+            </a>
+        </div>
+        
+        <div class="status-info">
+            <div class="status-grid">
+                <div class="status-item">
+                    <div class="status-label">Server Status</div>
+                    <div class="status-value">🟢 Online</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">HTTP Port</div>
+                    <div class="status-value">58002</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">HTTPS Port</div>
+                    <div class="status-value">58003</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">Total Projects</div>
+                    <div class="status-value">2 + Jenkins</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Auto refresh status setiap 30 detik
+        setTimeout(() => {
+            location.reload();
+        }, 30000);
+        
+        // Tampilkan waktu loading
+        console.log('Dashboard loaded at:', new Date().toLocaleString());
+    </script>
+</body>
+</html>
