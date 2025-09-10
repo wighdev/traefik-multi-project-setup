@@ -7,11 +7,21 @@ api:
   debug: true
   insecure: true
 
+# Metrics configuration for Prometheus
+metrics:
+  prometheus:
+    addRoutersLabels: true
+    addServicesLabels: true
+    addEntryPointsLabels: true
+
 entryPoints:
   web:
     address: ":80"
   websecure:
     address: ":443"
+  # Internal metrics endpoint
+  metrics:
+    address: ":8080"
 
 providers:
   docker:

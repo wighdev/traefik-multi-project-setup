@@ -6,6 +6,8 @@ services:
     ports:
       - "58002:80"   # HTTP port yang diizinkan
       - "58003:443"  # HTTPS port yang diizinkan
+      # Metrics port (internal, not exposed publicly for security)
+      # - "8080:8080"  # Only expose if needed for external monitoring
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./traefik.yml:/traefik.yml:ro
