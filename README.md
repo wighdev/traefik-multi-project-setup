@@ -84,6 +84,25 @@ traefik-multi-project-setup/
    - Project 2: `http://YOUR_IP:58002/project2`
    - Traefik Dashboard: `http://YOUR_IP:58002/traefik`
 
+5. **Optional: Start monitoring stack:**
+   ```bash
+   # Start Prometheus & Grafana monitoring
+   docker compose -f docker-compose.monitoring.yml up -d
+   
+   # Access monitoring dashboards:
+   # - Prometheus: http://YOUR_IP:58002/prometheus
+   # - Grafana: http://YOUR_IP:58002/grafana (admin/admin)
+   ```
+
+6. **Optional: Run load testing:**
+   ```bash
+   # Check available tests
+   ./run-k6-tests.sh --list
+   
+   # Run all k6 load tests
+   ./run-k6-tests.sh
+   ```
+
 ## Services
 
 | Service | URL | Description |
@@ -93,6 +112,8 @@ traefik-multi-project-setup/
 | Project 1 | `http://YOUR_IP:58002/project1` | Example Node.js application |
 | Project 2 | `http://YOUR_IP:58002/project2` | Example Python/Django application |
 | Traefik Dashboard | `http://YOUR_IP:58002/traefik` | Traefik monitoring dashboard |
+| **Prometheus** | `http://YOUR_IP:58002/prometheus` | **Metrics collection & monitoring** |
+| **Grafana** | `http://YOUR_IP:58002/grafana` | **Dashboard visualization & alerting** |
 
 ## Adding New Project
 
