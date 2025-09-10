@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  # Override untuk development environment
+  jenkins:
+    volumes:
+      - ./jenkins-dev:/var/jenkins_home/dev-configs
+    environment:
+      - JENKINS_OPTS="--prefix=/jenkins --httpPort=8080"
+      - JAVA_OPTS="-Djenkins.install.runSetupWizard=false"
+
+  project1-app:
+    volumes:
+      - ./project1:/app
+      - /app/node_modules  # untuk performance di Windows
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+
+  project2-app:
+    volumes:
+      - ./project2:/app
+    environment:
+      - DEBUG=true
+      - DJANGO_SETTINGS_MODULE=project2.settings.development

@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  traefik:
+    extends:
+      file: traefik-docker-compose.yml
+      service: traefik
+    environment:
+      - TRAEFIK_LOG_LEVEL=WARN
+      - TRAEFIK_API_INSECURE=false
+    volumes:
+      - ./traefik.prod.yml:/traefik.yml:ro
+
+  jenkins:
+    extends:
+      file: projects-docker-compose.yml  
+      service: jenkins
+    environment:
+      - JENKINS_OPTS="--prefix=/jenkins --httpPort=8080"
+      - JAVA_OPTS="-server -Xms512m -Xmx2g"
+
+  project1-app:
+    extends:
+      file: projects-docker-compose.yml
+      service: project1-app
+    environment:
+      - NODE_ENV=production
+    restart: always
+
+  project2-app:
+    extends:
+      file: projects-docker-compose.yml
+      service: project2-app
+    environment:
+      - DEBUG=false
+      - FLASK_ENV=production
+    restart: always

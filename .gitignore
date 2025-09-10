@@ -1,0 +1,43 @@
+# Docker volumes
+jenkins_home/
+mysql_data/
+postgres_data/
+
+# Logs
+logs/
+*.log
+
+# SSL Certificates
+certs/
+*.pem
+acme.json
+
+# Environment
+.env.local
+.env.production
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Application specific
+node_modules/
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+
+# Backup files  
+*.backup
+*.bak
