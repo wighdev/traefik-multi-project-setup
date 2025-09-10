@@ -1,4 +1,4 @@
-.PHONY: help setup start stop restart logs status clean
+.PHONY: help setup start stop restart logs status clean test
 
 # Default target
 help:
@@ -10,6 +10,7 @@ help:
 	@echo "  logs     - Show logs (specify SERVICE=name)"
 	@echo "  status   - Show services status"
 	@echo "  clean    - Clean up containers and networks"
+	@echo "  test     - Run k6 load tests"
 
 setup:
 	@echo "Setting up Traefik Multi-Project environment..."
@@ -62,3 +63,7 @@ backup:
 		--exclude=certs \
 		.
 	@echo "Backup created!"
+
+test:
+	@echo "Running k6 load tests..."
+	./run-k6-tests.sh
