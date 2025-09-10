@@ -1,0 +1,83 @@
+{
+  "services": {
+    "dashboard": {
+      "url": "/",
+      "expectedTitle": "Traefik Multi-Project Dashboard",
+      "expectedElements": [
+        "Jenkins",
+        "Project 1",
+        "Project 2", 
+        "Traefik"
+      ],
+      "healthCheck": null
+    },
+    "project1": {
+      "url": "/project1",
+      "expectedTitle": "Project 1",
+      "expectedElements": [
+        "Node.js",
+        "Example"
+      ],
+      "healthCheck": "/project1/health"
+    },
+    "project2": {
+      "url": "/project2", 
+      "expectedTitle": "Project 2",
+      "expectedElements": [
+        "Python",
+        "Flask"
+      ],
+      "healthCheck": "/project2/health"
+    },
+    "jenkins": {
+      "url": "/jenkins",
+      "expectedTitle": "Jenkins",
+      "expectedElements": [
+        "Dashboard",
+        "New Item"
+      ],
+      "healthCheck": "/jenkins/login"
+    },
+    "traefik": {
+      "url": "/dashboard/",
+      "expectedTitle": "Traefik",
+      "expectedElements": [
+        "HTTP",
+        "Services",
+        "Routers"
+      ],
+      "healthCheck": null
+    }
+  },
+  "navigation": {
+    "dashboardLinks": [
+      {
+        "selector": "a[href*='jenkins']",
+        "expectedUrl": "/jenkins"
+      },
+      {
+        "selector": "a[href*='project1']", 
+        "expectedUrl": "/project1"
+      },
+      {
+        "selector": "a[href*='project2']",
+        "expectedUrl": "/project2"
+      },
+      {
+        "selector": "a[href*='dashboard']",
+        "expectedUrl": "/dashboard"
+      }
+    ]
+  },
+  "performance": {
+    "expectedLoadTime": 3000,
+    "expectedResponseTime": 1000
+  },
+  "browser": {
+    "viewports": [
+      { "width": 1920, "height": 1080, "name": "desktop" },
+      { "width": 768, "height": 1024, "name": "tablet" },
+      { "width": 375, "height": 667, "name": "mobile" }
+    ]
+  }
+}

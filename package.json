@@ -1,0 +1,34 @@
+{
+  "name": "traefik-multi-project-setup",
+  "version": "1.0.0",
+  "description": "Traefik multi-project setup with comprehensive testing framework",
+  "scripts": {
+    "test:ui": "playwright test",
+    "test:ui:headed": "playwright test --headed",
+    "test:ui:debug": "playwright test --debug",
+    "test:ui:report": "playwright show-report",
+    "test:ui:docker": "docker compose -f docker-compose.testing.yml --profile ui-testing up --build",
+    "test:k6": "./run-k6-tests.sh",
+    "test:all": "npm run test:k6 && npm run test:ui",
+    "install:browsers": "playwright install",
+    "start:testing": "./manage.sh start",
+    "stop:testing": "./manage.sh stop",
+    "setup": "npm install && npm run install:browsers"
+  },
+  "keywords": [
+    "traefik",
+    "docker",
+    "testing",
+    "playwright",
+    "k6",
+    "e2e"
+  ],
+  "author": "Traefik Multi-Project Setup",
+  "license": "MIT",
+  "devDependencies": {
+    "@playwright/test": "^1.40.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

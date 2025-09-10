@@ -1,0 +1,68 @@
+services:
+  # Playwright test runner service
+  playwright-tests:
+    image: mcr.microsoft.com/playwright:v1.40.0-jammy
+    container_name: playwright-tests
+    working_dir: /app
+    volumes:
+      - .:/app
+      - /app/node_modules
+    networks:
+      - traefik-network
+    environment:
+      - BASE_URL=http://traefik:80
+      - CI=${CI:-false}
+      - PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+    command: ["npm", "run", "test:ui"]
+    depends_on:
+      - traefik
+      - project1-app
+      - project2-app
+      - jenkins
+    profiles:
+      - testing
+      - ui-testing
+
+  # Test data generator service (optional)
+  test-data-generator:
+    image: alpine:latest
+    container_name: test-data-generator
+    volumes:
+      - ./tests/fixtures:/fixtures
+    command: >
+      sh -c "
+        echo 'Generating test data...' &&
+        date > /fixtures/test-run-info.txt &&
+        echo 'Test run started at:' >> /fixtures/test-run-info.txt &&
+        date >> /fixtures/test-run-info.txt
+      "
+    profiles:
+      - testing
+      - ui-testing
+
+  # Test reporting service
+  test-reporter:
+    image: nginx:alpine
+    container_name: test-reporter
+    volumes:
+      - ./test-results:/usr/share/nginx/html:ro
+      - ./tests/support/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "58004:80"
+    networks:
+      - traefik-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.test-reports.rule=PathPrefix(`/test-reports`)"
+      - "traefik.http.routers.test-reports.service=test-reports"
+      - "traefik.http.services.test-reports.loadbalancer.server.port=80"
+      - "traefik.http.middlewares.test-reports-stripprefix.stripprefix.prefixes=/test-reports"
+      - "traefik.http.routers.test-reports.middlewares=test-reports-stripprefix"
+    profiles:
+      - testing
+      - ui-testing
+      - reporting
+
+networks:
+  traefik-network:
+    external: true
