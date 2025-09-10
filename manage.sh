@@ -10,10 +10,10 @@ NC='\033[0m' # No Color
 # Fungsi untuk menampilkan status
 show_status() {
     echo -e "${BLUE}=== Traefik Services Status ===${NC}"
-    docker compose -f traefik-docker compose.yml ps
+    docker compose -f traefik-docker-compose.yml ps
     echo ""
     echo -e "${BLUE}=== Project Services Status ===${NC}"
-    docker compose -f projects-docker compose.yml ps
+    docker compose -f projects-docker-compose.yml ps
     echo ""
     echo -e "${GREEN}Access URLs:${NC}"
     echo "📊 Dashboard: http://localhost:58002/"
@@ -43,14 +43,14 @@ case $1 in
         
         # Start Traefik first
         echo "Starting Traefik..."
-        docker compose -f traefik-docker compose.yml up -d
+        docker compose -f traefik-docker-compose.yml up -d
         
         # Wait a bit for Traefik to be ready
         sleep 5
         
         # Start Projects
         echo "Starting Projects..."
-        docker compose -f projects-docker compose.yml up -d
+        docker compose -f projects-docker-compose.yml up -d
         
         echo -e "${GREEN}All services started!${NC}"
         sleep 3
@@ -59,8 +59,8 @@ case $1 in
         
     "stop")
         echo -e "${YELLOW}Stopping all services...${NC}"
-        docker compose -f projects-docker compose.yml down
-        docker compose -f traefik-docker compose.yml down
+        docker compose -f projects-docker-compose.yml down
+        docker compose -f traefik-docker-compose.yml down
         echo -e "${GREEN}All services stopped!${NC}"
         ;;
         
@@ -101,8 +101,8 @@ case $1 in
         
     "update")
         echo -e "${YELLOW}Updating services...${NC}"
-        docker compose -f traefik-docker compose.yml pull
-        docker compose -f projects-docker compose.yml pull
+        docker compose -f traefik-docker-compose.yml pull
+        docker compose -f projects-docker-compose.yml pull
         $0 restart
         echo -e "${GREEN}Update completed!${NC}"
         ;;
