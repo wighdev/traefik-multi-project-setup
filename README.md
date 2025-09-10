@@ -190,18 +190,35 @@ open http://k6.localhost:58002/
 - `http://monitoring.localhost:58002/` - Monitoring Grafana
 - `http://prometheus.localhost:58002/` - Prometheus
 
-### IP-Based Access (NEW - Fixed 404 Issues)
-- Works with any IP address (localhost, external IPs, etc.)
-- `http://YOUR_IP:58002/k6` - K6 Dashboard
-- `http://YOUR_IP:58002/grafana` - Grafana (any instance)
-- `http://YOUR_IP:58002/prometheus` - Prometheus
-- All other services work natively with IP access
+### IP-Based Access (ENHANCED - Optimized for Static IP: 103.217.173.158)
+- **Static IP Optimized**: Specific routing rules for `103.217.173.158:58002`
+- **Universal IP Support**: Works with any IP address (localhost, external IPs, etc.)
+- **Path-based Routing**: All services accessible through unique paths
+- **Examples with Static IP**:
+  - `http://103.217.173.158:58002/` - Root Dashboard
+  - `http://103.217.173.158:58002/jenkins` - Jenkins CI/CD
+  - `http://103.217.173.158:58002/project1` - Project 1 (Node.js)
+  - `http://103.217.173.158:58002/project2` - Project 2 (Python)  
+  - `http://103.217.173.158:58002/dashboard/` - Traefik Dashboard
+  - `http://103.217.173.158:58002/k6` - K6 Load Testing
+  - `http://103.217.173.158:58002/grafana` - Grafana Monitoring
+  - `http://103.217.173.158:58002/prometheus` - Prometheus Metrics
 
 ### Benefits
-- 🚀 **No more 404 errors** when accessing services via IP addresses
+- 🎯 **Static IP Optimization** - Dedicated routing for 103.217.173.158:58002
+- 🚀 **Zero 404 errors** when accessing services via IP addresses
 - 🌐 **External IP compatibility** - services accessible from other machines
 - 🔄 **Backward compatibility** - original hostname access still works
 - 📱 **Mobile/remote access** - use actual server IP instead of localhost
+- ⚡ **High Priority Routing** - Static IP gets priority over fallback rules
+- 🔒 **Port Restriction Compliant** - Only uses allowed ports 58002 (HTTP) and 58003 (HTTPS)
+
+### Technical Implementation
+- **High Priority Rules**: Static IP routes have priority 200
+- **Fallback Routes**: General path-based routing with priority 100/90
+- **Docker Port Binding**: Correctly bound to 0.0.0.0:58002 and 0.0.0.0:58003
+- **Traefik Configuration**: Accepts external IPs with proper forwarded headers
+- **Router Rules**: `Host(103.217.173.158) && PathPrefix(/service)` for each service
 
 ## Services
 

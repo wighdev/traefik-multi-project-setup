@@ -1,60 +1,121 @@
 http:
   routers:
-    # Router untuk Jenkins (akses via IP)
+    # Static IP Host-based routing (HIGH PRIORITY)
+    static-ip-root:
+      rule: "Host(`103.217.173.158`) && Path(`/`)"
+      service: default-service
+      priority: 200
+
+    static-ip-jenkins:
+      rule: "Host(`103.217.173.158`) && PathPrefix(`/jenkins`)"
+      service: jenkins-service
+      middlewares:
+        - jenkins-headers
+      priority: 200
+
+    static-ip-project1:
+      rule: "Host(`103.217.173.158`) && PathPrefix(`/project1`)"
+      service: project1-service
+      middlewares:
+        - project1-stripprefix
+      priority: 200
+
+    static-ip-project2:
+      rule: "Host(`103.217.173.158`) && PathPrefix(`/project2`)"
+      service: project2-service
+      middlewares:
+        - project2-stripprefix
+      priority: 200
+
+    static-ip-traefik:
+      rule: "Host(`103.217.173.158`) && PathPrefix(`/dashboard`)"
+      service: api@internal
+      priority: 200
+
+    static-ip-traefik-api:
+      rule: "Host(`103.217.173.158`) && PathPrefix(`/api`)"
+      service: api@internal
+      priority: 200
+
+    static-ip-grafana:
+      rule: "Host(`103.217.173.158`) && PathPrefix(`/grafana`)"
+      service: k6-grafana-service
+      middlewares:
+        - grafana-stripprefix
+      priority: 200
+
+    static-ip-prometheus:
+      rule: "Host(`103.217.173.158`) && PathPrefix(`/prometheus`)"
+      service: prometheus-service
+      middlewares:
+        - prometheus-stripprefix
+      priority: 200
+
+    static-ip-k6:
+      rule: "Host(`103.217.173.158`) && PathPrefix(`/k6`)"
+      service: k6-dashboard-service
+      middlewares:
+        - k6-dashboard-stripprefix
+      priority: 200
+
+    # Router untuk Jenkins (akses via IP - fallback)
     jenkins:
       rule: "PathPrefix(`/jenkins`)"
       service: jenkins-service
       middlewares:
         - jenkins-headers
+      priority: 100
 
-    # Router untuk project lainnya
+    # Router untuk project lainnya (fallback)
     project1:
       rule: "PathPrefix(`/project1`)"
       service: project1-service
       middlewares:
         - project1-stripprefix
+      priority: 100
 
     project2:
       rule: "PathPrefix(`/project2`)"
       service: project2-service
       middlewares:
         - project2-stripprefix
+      priority: 100
 
-    # K6 Dashboard router (k6.localhost subdomain)
+    # K6 Dashboard router (k6.localhost subdomain - fallback)
     k6-dashboard:
       rule: "Host(`k6.localhost`)"
       service: k6-dashboard-service
-      priority: 100
+      priority: 90
 
-    # K6 Dashboard router - Path-based for IP access (NEW)
+    # K6 Dashboard router - Path-based for IP access (fallback)
     k6-dashboard-ip:
       rule: "PathPrefix(`/k6`)"
       service: k6-dashboard-service
       middlewares:
         - k6-dashboard-stripprefix
-      priority: 150
+      priority: 90
 
-    # K6 Grafana integration - Host-based (original)
+    # K6 Grafana integration - Host-based (fallback)
     k6-grafana:
       rule: "Host(`k6.localhost`) && PathPrefix(`/grafana`)"
       service: k6-grafana-service
-      priority: 200
+      priority: 90
 
-    # Grafana router - Path-based for IP access (NEW)
+    # Grafana router - Path-based for IP access (fallback)
     grafana-ip:
       rule: "PathPrefix(`/grafana`)"
       service: k6-grafana-service
       middlewares:
         - grafana-stripprefix
-      priority: 150
+      priority: 90
 
-    # Prometheus router - Path-based for IP access (NEW)
+    # Prometheus router - Path-based for IP access (fallback)
     prometheus-ip:
       rule: "PathPrefix(`/prometheus`)"
       service: prometheus-service
       middlewares:
         - prometheus-stripprefix
-      priority: 150
+      priority: 90
 
   middlewares:
     jenkins-headers:
@@ -105,6 +166,12 @@ http:
           - "*"
 
   services:
+    # Default landing page service
+    default-service:
+      loadBalancer:
+        servers:
+          - url: "http://default-app:80"
+
     jenkins-service:
       loadBalancer:
         servers:
@@ -130,7 +197,7 @@ http:
         servers:
           - url: "http://grafana:3000"
 
-    # Prometheus service for path-based access (NEW)
+    # Prometheus service for path-based access
     prometheus-service:
       loadBalancer:
         servers:
