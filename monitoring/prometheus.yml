@@ -26,7 +26,7 @@ scrape_configs:
   # Traefik metrics
   - job_name: 'traefik'
     static_configs:
-      - targets: ['traefik:8080']
+      - targets: ['172.18.0.2:8080']
     metrics_path: /metrics
     scrape_interval: 15s
 

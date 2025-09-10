@@ -19,9 +19,6 @@ entryPoints:
     address: ":80"
   websecure:
     address: ":443"
-  # Internal metrics endpoint
-  metrics:
-    address: ":8080"
 
 providers:
   docker:

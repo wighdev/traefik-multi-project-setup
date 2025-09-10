@@ -10,34 +10,17 @@ NC='\033[0m' # No Color
 # Fungsi untuk menampilkan status
 show_status() {
     echo -e "${BLUE}=== Traefik Services Status ===${NC}"
-    docker-compose -f traefik-docker-compose.yml ps
+    docker compose -f traefik-docker-compose.yml ps
     echo ""
     echo -e "${BLUE}=== Project Services Status ===${NC}"
-    docker-compose -f projects-docker-compose.yml ps
+    docker compose -f projects-docker-compose.yml ps
     echo ""
-    
-    # Check if monitoring is enabled
-    if docker-compose -f docker-compose.monitoring.yml ps | grep -q "Up"; then
-        echo -e "${BLUE}=== Monitoring Services Status ===${NC}"
-        docker-compose -f docker-compose.monitoring.yml ps
-        echo ""
-    fi
-    
     echo -e "${GREEN}Access URLs:${NC}"
     echo "📊 Dashboard: http://localhost:58002/"
     echo "🔧 Jenkins: http://localhost:58002/jenkins"
     echo "🚀 Project 1: http://localhost:58002/project1"
     echo "🐍 Project 2: http://localhost:58002/project2"
     echo "⚡ Traefik: http://localhost:58002/dashboard/"
-    
-    # Show monitoring URLs if services are running
-    if docker-compose -f docker-compose.monitoring.yml ps | grep -q "Up"; then
-        echo ""
-        echo -e "${GREEN}Monitoring URLs:${NC}"
-        echo "📈 Grafana: http://monitoring.localhost:58002/ (admin/admin123)"
-        echo "📊 Prometheus: http://prometheus.localhost:58002/"
-        echo "🚨 AlertManager: http://alerts.localhost:58002/ (if enabled)"
-    fi
 }
 
 case $1 in
@@ -60,14 +43,14 @@ case $1 in
         
         # Start Traefik first
         echo "Starting Traefik..."
-        docker-compose -f traefik-docker-compose.yml up -d
+        docker compose -f traefik-docker-compose.yml up -d
         
         # Wait a bit for Traefik to be ready
         sleep 5
         
         # Start Projects
         echo "Starting Projects..."
-        docker-compose -f projects-docker-compose.yml up -d
+        docker compose -f projects-docker-compose.yml up -d
         
         echo -e "${GREEN}All services started!${NC}"
         sleep 3
@@ -76,8 +59,8 @@ case $1 in
         
     "stop")
         echo -e "${YELLOW}Stopping all services...${NC}"
-        docker-compose -f projects-docker-compose.yml down
-        docker-compose -f traefik-docker-compose.yml down
+        docker compose -f projects-docker-compose.yml down
+        docker compose -f traefik-docker-compose.yml down
         echo -e "${GREEN}All services stopped!${NC}"
         ;;
         
@@ -97,15 +80,7 @@ case $1 in
             echo "- project2-app"
             echo "- default-app"
             echo ""
-            echo -e "${YELLOW}Monitoring services (if running):${NC}"
-            echo "- prometheus"
-            echo "- grafana"
-            echo "- alertmanager"
-            echo "- node-exporter"
-            echo "- cadvisor"
-            echo ""
             echo "Usage: $0 logs <service-name>"
-            echo "   or: $0 monitoring logs <service-name>"
         else
             echo -e "${BLUE}Showing logs for: $2${NC}"
             docker logs -f $2
@@ -126,8 +101,8 @@ case $1 in
         
     "update")
         echo -e "${YELLOW}Updating services...${NC}"
-        docker-compose -f traefik-docker-compose.yml pull
-        docker-compose -f projects-docker-compose.yml pull
+        docker compose -f traefik-docker-compose.yml pull
+        docker compose -f projects-docker-compose.yml pull
         $0 restart
         echo -e "${GREEN}Update completed!${NC}"
         ;;
@@ -163,7 +138,7 @@ case $1 in
                 docker network create traefik-network 2>/dev/null || true
                 
                 # Start core monitoring (Prometheus + Grafana)
-                docker-compose -f docker-compose.monitoring.yml up -d prometheus grafana
+                docker compose -f docker-compose.monitoring.yml up -d prometheus grafana
                 
                 echo -e "${GREEN}Core monitoring started!${NC}"
                 echo ""
@@ -177,23 +152,23 @@ case $1 in
                 ;;
             "stop")
                 echo -e "${YELLOW}Stopping monitoring stack...${NC}"
-                docker-compose -f docker-compose.monitoring.yml down
+                docker compose -f docker-compose.monitoring.yml down
                 echo -e "${GREEN}Monitoring stopped!${NC}"
                 ;;
             "alertmanager")
                 echo -e "${YELLOW}Starting AlertManager...${NC}"
-                docker-compose -f docker-compose.monitoring.yml --profile alerting up -d alertmanager
+                docker compose -f docker-compose.monitoring.yml --profile alerting up -d alertmanager
                 echo -e "${GREEN}AlertManager started!${NC}"
                 echo "🚨 AlertManager: http://alerts.localhost:58002/"
                 ;;
             "node-metrics")
                 echo -e "${YELLOW}Starting Node Exporter...${NC}"
-                docker-compose -f docker-compose.monitoring.yml --profile node-metrics up -d node-exporter
+                docker compose -f docker-compose.monitoring.yml --profile node-metrics up -d node-exporter
                 echo -e "${GREEN}Node Exporter started!${NC}"
                 ;;
             "container-metrics")
                 echo -e "${YELLOW}Starting cAdvisor...${NC}"
-                docker-compose -f docker-compose.monitoring.yml --profile container-metrics up -d cadvisor
+                docker compose -f docker-compose.monitoring.yml --profile container-metrics up -d cadvisor
                 echo -e "${GREEN}cAdvisor started!${NC}"
                 ;;
             "logs")
