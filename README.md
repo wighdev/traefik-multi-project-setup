@@ -204,6 +204,31 @@ open http://k6.localhost:58002/
   - `http://103.217.173.158:58002/grafana` - Grafana Monitoring
   - `http://103.217.173.158:58002/prometheus` - Prometheus Metrics
 
+### 🔧 Nginx Reverse Proxy Solution (NEW!)
+
+For environments where ERR_CONNECTION_REFUSED occurs when accessing Docker containers via static IP, we provide a comprehensive Nginx reverse proxy solution:
+
+**Quick Setup:**
+```bash
+# Automated full setup
+./manage-nginx.sh full-setup
+
+# Or step by step
+./manage-nginx.sh install    # Install Nginx reverse proxy
+./manage.sh start            # Start Docker services  
+./manage-nginx.sh start      # Start Nginx
+./manage-nginx.sh test       # Test setup
+```
+
+**Benefits:**
+- 🎯 **Eliminates ERR_CONNECTION_REFUSED** - Static IP access works reliably
+- 🌐 **External IP Access** - Services accessible from other machines  
+- 🔒 **Secure Internal Network** - Docker containers remain isolated
+- ⚡ **High Performance** - Nginx handles static IP binding efficiently
+- 🔧 **Easy Management** - Simple commands for all operations
+
+**See:** `NGINX_PROXY_SETUP.md` for complete documentation
+
 ### Benefits
 - 🎯 **Static IP Optimization** - Dedicated routing for 103.217.173.158:58002
 - 🚀 **Zero 404 errors** when accessing services via IP addresses
@@ -219,6 +244,7 @@ open http://k6.localhost:58002/
 - **Docker Port Binding**: Correctly bound to 0.0.0.0:58002 and 0.0.0.0:58003
 - **Traefik Configuration**: Accepts external IPs with proper forwarded headers
 - **Router Rules**: `Host(103.217.173.158) && PathPrefix(/service)` for each service
+- **Nginx Reverse Proxy**: Optional layer for static IP interface binding
 
 ## Services
 
@@ -263,6 +289,7 @@ open http://k6.localhost:58002/
 ## Management Commands
 
 ```bash
+# Docker Services
 ./manage.sh start      # Start all services
 ./manage.sh stop       # Stop all services  
 ./manage.sh restart    # Restart all services
@@ -270,6 +297,17 @@ open http://k6.localhost:58002/
 ./manage.sh status     # Show status of all services
 ./manage.sh k6         # K6 load testing management
 ./manage.sh monitoring # Monitoring stack management
+
+# Nginx Reverse Proxy (for static IP access)
+./manage-nginx.sh install     # Install Nginx reverse proxy
+./manage-nginx.sh start       # Start Nginx service
+./manage-nginx.sh stop        # Stop Nginx service
+./manage-nginx.sh restart     # Restart Nginx service
+./manage-nginx.sh status      # Show Nginx status
+./manage-nginx.sh test        # Test configuration and connectivity
+./manage-nginx.sh logs        # Show Nginx logs
+./manage-nginx.sh ssl         # Configure SSL certificates
+./manage-nginx.sh full-setup  # Complete setup (Nginx + Docker)
 ```
 
 ## Configuration Files
